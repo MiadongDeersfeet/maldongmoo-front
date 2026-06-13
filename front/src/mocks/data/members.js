@@ -1,0 +1,43 @@
+/** @see docs/MOCK_DATA_GUIDE.md — TB_MEMBER seed */
+export const seedMembers = [
+  {
+    memberId: 1,
+    kakaoId: 'kakao_1001',
+    profileImg: '/images/profiles/kim-yoongi.png',
+    name: '김윤기',
+    role: 'MEMBER',
+    createdAt: '2026-05-01 10:00:00',
+    deletedAt: null,
+    status: 'Y',
+  },
+  {
+    memberId: 2,
+    kakaoId: 'kakao_1002',
+    profileImg: '/images/profiles/park-eunbin.png',
+    name: '박은빈',
+    role: 'MEMBER',
+    createdAt: '2026-05-02 11:00:00',
+    deletedAt: null,
+    status: 'Y',
+  },
+  {
+    memberId: 3,
+    kakaoId: 'kakao_1003',
+    profileImg: 'https://placehold.co/80x80/FFD6E0/333?text=이',
+    name: '이준호',
+    role: 'MEMBER',
+    createdAt: '2026-05-03 09:00:00',
+    deletedAt: null,
+    status: 'Y',
+  },
+  {
+    memberId: 4,
+    kakaoId: 'kakao_1004',
+    profileImg: null,
+    name: '최서연',
+    role: 'MEMBER',
+    createdAt: '2026-05-10 14:00:00',
+    deletedAt: null,
+    status: 'Y',
+  },
+];

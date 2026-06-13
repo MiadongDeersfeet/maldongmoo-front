@@ -1,0 +1,74 @@
+.recitation-text__body {
+  font-family: var(--font-family);
+  color: var(--color-text-main);
+}
+
+.verse-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin-bottom: 0.75rem;
+}
+
+.verse-line:last-child {
+  margin-bottom: 0;
+}
+
+.verse-number {
+  flex: 0 0 1.5rem;
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.75;
+  color: var(--color-primary);
+  text-align: left;
+}
+
+.verse-text,
+.passage-plain-line {
+  font-family: var(--font-family);
+  font-weight: 400;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--color-text-main);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.verse-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.passage-plain-line {
+  margin: 0 0 0.5rem;
+}
+
+.passage-plain-line:last-child {
+  margin-bottom: 0;
+}
+
+.passage-spacer {
+  height: 0.5rem;
+}
+
+.recitation-text--lg .verse-number,
+.recitation-text--lg .verse-text,
+.recitation-text--lg .passage-plain-line {
+  font-size: 1rem;
+  line-height: 1.85;
+}
+
+.recitation-text--fullscreen .verse-number,
+.recitation-text--fullscreen .verse-text,
+.recitation-text--fullscreen .passage-plain-line {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: #203c35;
+}
+
+.recitation-text--fullscreen .verse-number {
+  color: var(--color-primary);
+}

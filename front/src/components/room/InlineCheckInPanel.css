@@ -1,0 +1,90 @@
+/* Shared inline check-in panel base */
+.inline-check-in-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 35;
+  padding: 0 var(--space-page-x) calc(0.875rem + env(safe-area-inset-bottom, 0px));
+  background: var(--color-card);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -10px 40px rgba(31, 52, 48, 0.12);
+  animation: inline-panel-in var(--transition-normal);
+}
+
+.inline-check-in-panel__handle {
+  width: 2.5rem;
+  height: 0.25rem;
+  margin: 0.625rem auto 0.75rem;
+  border-radius: var(--radius-pill);
+  background: rgba(31, 52, 48, 0.12);
+}
+
+.inline-check-in-panel__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-circle);
+  flex-shrink: 0;
+}
+
+.inline-check-in-panel__close:active:not(:disabled) {
+  background: var(--color-accent-mint);
+}
+
+.inline-check-in-panel__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 0.625rem;
+  margin-top: 1rem;
+}
+
+.inline-check-in-panel__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: var(--touch-min);
+  border-radius: var(--radius-pill);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition:
+    transform var(--transition-fast),
+    opacity var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.inline-check-in-panel__btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.inline-check-in-panel__btn--secondary {
+  background: var(--color-app-bg);
+  color: var(--color-text-sub);
+  border: 1px solid var(--color-border-card);
+}
+
+.inline-check-in-panel__btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(63, 143, 122, 0.28);
+}
+
+.inline-check-in-panel__btn--primary:disabled,
+.inline-check-in-panel__btn--secondary:disabled {
+  opacity: 0.55;
+}
+
+@keyframes inline-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

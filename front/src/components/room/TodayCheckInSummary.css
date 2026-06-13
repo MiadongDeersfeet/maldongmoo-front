@@ -1,0 +1,30 @@
+.today-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-card-gap);
+  margin-bottom: var(--space-section);
+  padding: 0.875rem var(--space-card);
+  background: var(--color-card);
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+}
+
+.today-summary__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.today-summary__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.today-summary__note {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}

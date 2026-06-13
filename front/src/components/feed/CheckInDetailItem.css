@@ -1,0 +1,21 @@
+.check-in-detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding: var(--space-xs) 0;
+}
+
+.check-in-detail-item__icon {
+  flex-shrink: 0;
+}
+
+.check-in-detail-item__label {
+  flex: 1;
+}
+
+.check-in-detail-item__time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}

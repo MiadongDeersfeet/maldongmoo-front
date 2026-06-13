@@ -1,0 +1,26 @@
+/* Thin, transparent sage scrollbar for internal scroll areas */
+.scrollbar-soft {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(78, 128, 111, 0.22) transparent;
+}
+
+.scrollbar-soft::-webkit-scrollbar {
+  width: 3px;
+}
+
+.scrollbar-soft::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-soft::-webkit-scrollbar-thumb {
+  background: rgba(78, 128, 111, 0.18);
+  border-radius: 999px;
+}
+
+.scrollbar-soft::-webkit-scrollbar-thumb:hover {
+  background: rgba(78, 128, 111, 0.3);
+}
+
+.scrollbar-soft::-webkit-scrollbar-thumb:active {
+  background: rgba(78, 128, 111, 0.38);
+}

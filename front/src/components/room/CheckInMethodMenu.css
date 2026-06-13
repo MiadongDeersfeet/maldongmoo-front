@@ -1,0 +1,185 @@
+.check-in-footer-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.check-in-footer-layer__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(31, 52, 48, 0.22);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+  animation: check-in-footer-backdrop-in var(--transition-normal);
+}
+
+.check-in-footer-layer__menu {
+  position: absolute;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 5.75rem);
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4rem;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.check-in-footer-layer__menu--open {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.check-in-footer-layer__option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transform: translateY(1.25rem) scale(0.55);
+  opacity: 0;
+  transition:
+    transform var(--transition-normal),
+    opacity var(--transition-normal);
+}
+
+.check-in-footer-layer__menu--open .check-in-footer-layer__option--voice {
+  transform: translate(-0.75rem, -0.25rem) scale(1);
+  opacity: 1;
+  transition-delay: 0.05s;
+}
+
+.check-in-footer-layer__menu--open .check-in-footer-layer__option--counter {
+  transform: translate(0.75rem, -0.25rem) scale(1);
+  opacity: 1;
+  transition-delay: 0.1s;
+}
+
+.check-in-footer-layer__option-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-circle);
+  background: var(--color-card);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-border-card);
+  transition: transform var(--transition-fast);
+}
+
+.check-in-footer-layer__option:active .check-in-footer-layer__option-circle {
+  transform: scale(0.94);
+}
+
+.check-in-footer-layer__option-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.footer-action-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: flex-end;
+  gap: 0.25rem;
+  min-height: 5rem;
+  padding: 0 0.5rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(31, 52, 48, 0.08);
+  box-shadow: 0 -8px 24px rgba(31, 52, 48, 0.06);
+  pointer-events: auto;
+}
+
+.footer-action-bar__side {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.125rem;
+  padding-bottom: 0.375rem;
+}
+
+.footer-action-bar__side--left {
+  justify-content: flex-start;
+}
+
+.footer-action-bar__side--right {
+  justify-content: flex-end;
+}
+
+.footer-action-bar__action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  min-width: 2.75rem;
+  min-height: 2.5rem;
+  padding: 0 0.25rem;
+  color: var(--color-text-sub);
+  font-size: 0.625rem;
+  font-weight: 600;
+}
+
+.footer-action-bar__action--active {
+  color: var(--color-primary);
+}
+
+.footer-action-bar__action:active:not(:disabled) {
+  color: var(--color-primary);
+}
+
+.footer-action-bar__action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.footer-action-bar__fab {
+  position: relative;
+  top: -1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.0625rem;
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-circle);
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow:
+    0 10px 28px rgba(63, 143, 122, 0.22),
+    0 0 0 8px rgba(207, 237, 227, 0.3);
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.footer-action-bar__fab:active {
+  transform: scale(0.96);
+  background: var(--color-primary-dark);
+}
+
+.footer-action-bar__fab--open {
+  background: var(--color-primary-dark);
+  transform: scale(1.04);
+}
+
+.footer-action-bar__fab-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  max-width: 3.5rem;
+  text-align: center;
+}
+
+@keyframes check-in-footer-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

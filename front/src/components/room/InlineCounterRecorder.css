@@ -1,0 +1,115 @@
+.inline-counter-recorder__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.inline-counter-recorder__title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.inline-counter-recorder__title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.inline-counter-recorder__goal {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.inline-counter-recorder__main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.inline-counter-recorder__value-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 4.5rem;
+}
+
+.inline-counter-recorder__value {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.inline-counter-recorder__unit {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-top: 0.125rem;
+}
+
+.inline-counter-recorder__quick-btn {
+  min-width: 2.5rem;
+  min-height: 2rem;
+  padding: 0 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  border-radius: var(--radius-pill);
+}
+
+.inline-counter-recorder__quick-btn:active:not(:disabled) {
+  background: var(--color-accent-mint);
+}
+
+.inline-counter-recorder__quick-btn:disabled {
+  opacity: 0.35;
+}
+
+.inline-counter-recorder__step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-circle);
+  background: var(--color-card);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.inline-counter-recorder__step-btn:active:not(:disabled) {
+  transform: scale(0.94);
+  background: var(--color-primary-light);
+}
+
+.inline-counter-recorder__step-btn:disabled {
+  opacity: 0.4;
+}
+
+.inline-counter-recorder__reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin: 0.5rem auto 0;
+  min-height: 2rem;
+  padding: 0 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  border-radius: var(--radius-pill);
+}
+
+.inline-counter-recorder__reset:active:not(:disabled) {
+  background: var(--color-accent-mint);
+}
+
+.inline-counter-recorder__reset:disabled {
+  opacity: 0.45;
+}

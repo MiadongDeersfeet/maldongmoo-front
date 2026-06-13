@@ -1,0 +1,110 @@
+.today-status-card {
+  width: 100%;
+  padding: 0.5rem 0.625rem 0.4375rem;
+  background: #fffefb;
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 4px rgba(31, 52, 48, 0.04);
+}
+
+.today-status-card__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.375rem;
+}
+
+.today-status-card__col {
+  min-width: 0;
+  padding: 0.4375rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.today-status-card__col--done {
+  background: linear-gradient(145deg, rgba(223, 243, 236, 0.65) 0%, rgba(207, 237, 227, 0.45) 100%);
+  border: 1px solid rgba(63, 143, 122, 0.12);
+}
+
+.today-status-card__col--pending {
+  background: linear-gradient(145deg, #fff8f5 0%, #fceee8 100%);
+  border: 1px solid rgba(210, 160, 140, 0.14);
+}
+
+.today-status-card__col--all-done {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, rgba(223, 243, 236, 0.5) 0%, rgba(207, 237, 227, 0.35) 100%);
+  border: 1px solid rgba(63, 143, 122, 0.1);
+}
+
+.today-status-card__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin-bottom: 0.375rem;
+  line-height: 1.3;
+}
+
+.today-status-card__col--pending .today-status-card__label {
+  color: #7a6358;
+}
+
+.today-status-card__all-done-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3125rem 0.625rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(63, 143, 122, 0.16);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.today-status-card__avatars {
+  display: flex;
+  align-items: center;
+  min-height: 1.75rem;
+}
+
+.today-status-card__avatar {
+  margin-left: -0.3125rem;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 3px rgba(31, 52, 48, 0.06);
+}
+
+.today-status-card__avatar:first-child {
+  margin-left: 0;
+}
+
+.today-status-card__avatars--pending .today-status-card__avatar {
+  opacity: 0.92;
+  border-color: #fff8f5;
+}
+
+.today-status-card__avatar-overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-left: -0.3125rem;
+  border-radius: var(--radius-circle);
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.today-status-card__empty {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+@media (max-width: 340px) {
+  .today-status-card__split {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,36 @@
+.date-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: var(--space-card-gap) 0;
+}
+
+.date-divider--default .date-divider__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-sub);
+}
+
+.date-divider--capsule {
+  justify-content: center;
+  margin: 1.25rem auto 1rem;
+}
+
+.date-divider--capsule::before,
+.date-divider--capsule::after {
+  content: '';
+  flex: 1;
+  max-width: 4rem;
+  height: 1px;
+  background: var(--color-line);
+}
+
+.date-divider--capsule .date-divider__label {
+  padding: 0.375rem 0.875rem;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-sub);
+  box-shadow: 0 2px 8px rgba(31, 52, 48, 0.04);
+}

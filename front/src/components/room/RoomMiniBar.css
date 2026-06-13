@@ -1,0 +1,116 @@
+.room-mini-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: #fffefb;
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 4px rgba(31, 52, 48, 0.04);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.room-mini-bar--section {
+  transition: background var(--transition-fast);
+}
+
+.room-mini-bar--section:active {
+  background: var(--color-card-soft);
+}
+
+.room-mini-bar--expanded {
+  border-color: rgba(63, 143, 122, 0.16);
+  background: var(--color-card-soft);
+}
+
+.room-mini-bar--checkin {
+  cursor: default;
+  flex-direction: column;
+  gap: 0.1875rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.room-mini-bar--dashboard {
+  padding: 0.4375rem 0.75rem;
+}
+
+.room-mini-bar__icon {
+  flex-shrink: 0;
+  margin-top: 0.0625rem;
+  color: var(--color-primary);
+}
+
+.room-mini-bar__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.room-mini-bar__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.room-mini-bar__label {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.room-mini-bar__dot {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.room-mini-bar__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-sub);
+  font-weight: 500;
+}
+
+.room-mini-bar__preview {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-mini-bar__chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.room-mini-bar__dashboard-line {
+  font-size: 0.75rem;
+  color: var(--color-text-main);
+  line-height: 1.4;
+}
+
+.room-mini-bar__dashboard-sub {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.room-mini-bar__status--done {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.room-mini-bar__status--pending {
+  color: var(--color-warning-text);
+  font-weight: 500;
+}

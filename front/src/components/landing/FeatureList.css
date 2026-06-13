@@ -1,0 +1,16 @@
+.feature-list {
+  padding: 0 var(--space-sm) var(--space-md);
+  flex: 1;
+}
+
+.feature-list__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+@media (max-width: 340px) {
+  .feature-list__grid {
+    grid-template-columns: 1fr;
+  }
+}

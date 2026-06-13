@@ -1,0 +1,55 @@
+:root {
+  /* Colors — bright ivory, clear sage, morning meditation */
+  --color-app-bg: #f8f6ef;
+  --color-app-bg-deep: #eef5f1;
+  --color-card: #ffffff;
+  --color-card-soft: #fbfffc;
+
+  --color-primary: #3f8f7a;
+  --color-primary-dark: #246b5a;
+  --color-primary-light: #dff3ec;
+
+  --color-accent-mint: #cfede3;
+  --color-accent-bluegreen: #ddefea;
+
+  --color-text-main: #1f3430;
+  --color-text-sub: #65766f;
+  --color-text-muted: #9aa8a2;
+
+  --color-success-bg: #e3f6ee;
+  --color-success-text: #28735e;
+
+  --color-warning-bg: #fff0ec;
+  --color-warning-text: #d96952;
+
+  --color-line: rgba(31, 52, 48, 0.08);
+  --color-border-card: rgba(31, 52, 48, 0.06);
+
+  /* Radius */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* Shadow */
+  --shadow-card: 0 8px 24px rgba(31, 52, 48, 0.06);
+  --shadow-soft: 0 4px 16px rgba(31, 52, 48, 0.05);
+  --shadow-floating: 0 14px 34px rgba(63, 143, 122, 0.28);
+  --shadow-fab-glow: 0 0 0 10px rgba(207, 237, 227, 0.35);
+
+  /* Spacing */
+  --space-page-x: 20px;
+  --space-section: 20px;
+  --space-card: 18px;
+  --space-card-gap: 14px;
+
+  /* Transition */
+  --transition-fast: 160ms ease;
+  --transition-normal: 220ms ease;
+
+  /* Layout */
+  --app-max-width: 430px;
+  --touch-min: 44px;
+}

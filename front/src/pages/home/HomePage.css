@@ -1,0 +1,42 @@
+.home-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at bottom right, rgba(207, 237, 227, 0.45), transparent 220px),
+    radial-gradient(circle at top right, rgba(207, 237, 227, 0.55), transparent 260px),
+    linear-gradient(180deg, var(--color-app-bg) 0%, var(--color-app-bg-deep) 100%);
+}
+
+.home-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.home-top-panel {
+  flex-shrink: 0;
+  padding: 0.375rem var(--space-page-x) 0;
+}
+
+.home-room-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 var(--space-page-x) calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.home-room-list-scroll .empty-state-card {
+  margin-top: 0.5rem;
+}

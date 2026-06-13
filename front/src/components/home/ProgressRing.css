@@ -1,0 +1,51 @@
+.progress-ring {
+  position: relative;
+  border-radius: var(--radius-circle);
+  flex-shrink: 0;
+  background: conic-gradient(
+    var(--color-primary) 0deg var(--progress-angle, 0deg),
+    var(--color-accent-bluegreen) var(--progress-angle, 0deg) 360deg
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring--md {
+  width: 3.75rem;
+  height: 3.75rem;
+}
+
+.progress-ring--sm {
+  width: 3rem;
+  height: 3rem;
+}
+
+.progress-ring::before {
+  content: '';
+  position: absolute;
+  border-radius: var(--radius-circle);
+  background: var(--color-card);
+}
+
+.progress-ring--md::before {
+  inset: 5px;
+}
+
+.progress-ring--sm::before {
+  inset: 4px;
+}
+
+.progress-ring__value {
+  position: relative;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.progress-ring--md .progress-ring__value {
+  font-size: 0.75rem;
+}
+
+.progress-ring--sm .progress-ring__value {
+  font-size: 0.6875rem;
+}

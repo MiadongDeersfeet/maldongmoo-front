@@ -1,0 +1,69 @@
+.recitation-section {
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.recitation-section--empty {
+  text-align: center;
+  padding: var(--space-lg) var(--space-md);
+}
+
+.recitation-section__empty-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+}
+
+.recitation-section__empty-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: var(--space-md);
+}
+
+.recitation-section__register-btn {
+  min-height: var(--touch-min);
+  padding: 0 var(--space-lg);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  border-radius: 14px;
+}
+
+.recitation-section__edit-btn {
+  margin-top: var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  font-weight: 600;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-sm);
+}
+
+.recitation-section__title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.recitation-section__range {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.recitation-section__text {
+  font-size: var(--font-size-sm);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.recitation-section__leader-note {
+  margin-top: var(--space-md);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
