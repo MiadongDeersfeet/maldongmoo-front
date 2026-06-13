@@ -1,0 +1,6 @@
+{
+  "installCommand": "npm install --prefix front",
+  "buildCommand": "npm run build --prefix front",
+  "outputDirectory": "front/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
