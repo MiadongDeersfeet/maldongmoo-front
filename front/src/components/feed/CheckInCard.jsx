@@ -19,6 +19,43 @@ function getRoleLabel(isOwnCard, roomRole) {
   return '멤버';
 }
 
+function buildDisplayRows(details) {
+  const sorted = [...details].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const rows = [];
+  let counterTotal = 0;
+  let lastCounterCreatedAt = null;
+
+  sorted.forEach((detail) => {
+    if (detail.checkInType === 'VOICE') {
+      rows.push({ type: 'voice', detail, key: `voice-${detail.detailId}` });
+      return;
+    }
+
+    counterTotal += detail.counterValue ?? 0;
+    lastCounterCreatedAt = detail.createdAt;
+  });
+
+  if (counterTotal > 0) {
+    const counterRow = {
+      type: 'counter',
+      total: counterTotal,
+      key: 'counter-sum',
+      createdAt: lastCounterCreatedAt,
+    };
+    const insertAt = rows.findIndex(
+      (row) => row.type === 'voice' && row.detail.createdAt > lastCounterCreatedAt,
+    );
+
+    if (insertAt === -1) {
+      rows.push(counterRow);
+    } else {
+      rows.splice(insertAt, 0, counterRow);
+    }
+  }
+
+  return rows;
+}
+
 function VoicePlayButton({ audioUrl }) {
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -40,19 +77,19 @@ function VoicePlayButton({ audioUrl }) {
   );
 }
 
-function DetailRow({ detail }) {
-  if (detail.checkInType === 'VOICE') {
+function DetailRow({ row }) {
+  if (row.type === 'voice') {
     return (
       <div className="feed-card__detail-row">
         <span className="feed-card__badge">녹음 인증</span>
-        <VoicePlayButton audioUrl={detail.audioUrl} />
+        <VoicePlayButton audioUrl={row.detail.audioUrl} />
       </div>
     );
   }
 
   return (
     <div className="feed-card__detail-row">
-      <span className="feed-card__badge">계수기 인증 · {detail.counterValue}회</span>
+      <span className="feed-card__badge">계수기 인증 · {row.total}회</span>
     </div>
   );
 }
@@ -67,8 +104,9 @@ export default function CheckInCard({
   const isOwnCard = card.memberId === currentMemberId;
   const roomRole = roomId ? getRoomRole(roomId, card.memberId) : null;
   const roleLabel = getRoleLabel(isOwnCard, roomRole);
-  const primaryDetail = card.details[card.details.length - 1];
-  const timeLabel = primaryDetail ? formatTime(primaryDetail.createdAt) : '';
+  const displayRows = buildDisplayRows(card.details);
+  const latestDetail = card.details[card.details.length - 1];
+  const timeLabel = latestDetail ? formatTime(latestDetail.createdAt) : '';
 
   if (variant === 'timeline') {
     return (
@@ -82,8 +120,8 @@ export default function CheckInCard({
           <span className="feed-card__time">{timeLabel}</span>
         </div>
         <div className="feed-card__body">
-          {card.details.map((detail) => (
-            <DetailRow key={detail.detailId} detail={detail} />
+          {displayRows.map((row) => (
+            <DetailRow key={row.key} row={row} />
           ))}
         </div>
         <AmenButton
@@ -104,9 +142,9 @@ export default function CheckInCard({
         <span className="check-in-card__name">{card.memberName}</span>
       </div>
       <div className="check-in-card__details">
-        {card.details.map((detail) => (
-          <div key={detail.detailId} className="check-in-detail-item">
-            {detail.checkInType === 'VOICE' ? '녹음' : `계수기 ${detail.counterValue}회`}
+        {displayRows.map((row) => (
+          <div key={row.key} className="check-in-detail-item">
+            {row.type === 'voice' ? '녹음' : `계수기 ${row.total}회`}
           </div>
         ))}
       </div>

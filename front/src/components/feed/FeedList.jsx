@@ -1,8 +1,20 @@
+import { useMemo, useRef } from 'react';
 import { MessageCircle } from 'lucide-react';
 import DateDivider from './DateDivider.jsx';
 import CheckInCard from './CheckInCard.jsx';
 import EmptyStateCard from '@/components/ui/EmptyStateCard.jsx';
+import { useFlipListAnimation } from '@/hooks/useFlipListAnimation.js';
 import './FeedList.css';
+
+function buildFeedOrderKey(feed) {
+  return feed
+    .map((day) =>
+      day.checkIns
+        .map((card) => `${card.checkInId}:${card.sortTime}:${card.details.length}`)
+        .join(','),
+    )
+    .join('|');
+}
 
 export default function FeedList({
   feed,
@@ -14,6 +26,11 @@ export default function FeedList({
   isInlineActive = false,
   showOldestHint = false,
 }) {
+  const listRef = useRef(null);
+  const feedOrderKey = useMemo(() => buildFeedOrderKey(feed), [feed]);
+
+  useFlipListAnimation(listRef, feedOrderKey);
+
   if (feed.length === 0) {
     if (variant === 'timeline') {
       return (
@@ -40,7 +57,7 @@ export default function FeedList({
     .join(' ');
 
   return (
-    <div className={timelineClass}>
+    <div className={timelineClass} ref={listRef}>
       {variant === 'timeline' && showOldestHint && (
         <p className="feed-list__oldest-hint">더 이전 기록은 없어요</p>
       )}
@@ -51,14 +68,19 @@ export default function FeedList({
             variant={variant === 'timeline' ? 'capsule' : 'default'}
           />
           {day.checkIns.map((card) => (
-            <CheckInCard
+            <div
               key={card.checkInId}
-              card={card}
-              currentMemberId={currentMemberId}
-              roomId={roomId}
-              onAmenToggle={onAmenToggle}
-              variant={variant}
-            />
+              className="feed-card-wrapper"
+              data-flip-id={String(card.checkInId)}
+            >
+              <CheckInCard
+                card={card}
+                currentMemberId={currentMemberId}
+                roomId={roomId}
+                onAmenToggle={onAmenToggle}
+                variant={variant}
+              />
+            </div>
           ))}
         </section>
       ))}

@@ -5,6 +5,7 @@ import { seedSections } from './data/sections.js';
 import { seedCheckIns } from './data/checkIns.js';
 import { seedCheckInDetails } from './data/checkInDetails.js';
 import { seedAmens } from './data/amens.js';
+import { seedChatMessages } from './data/chatMessages.js';
 
 /** 개발 기준일 — seed data와 일치 (@see docs/MOCK_DATA_GUIDE.md) */
 export const MOCK_TODAY = '2026-06-13';
@@ -25,6 +26,8 @@ function createSeedState() {
     checkIns: cloneSeed(seedCheckIns),
     checkInDetails: cloneSeed(seedCheckInDetails),
     amens: cloneSeed(seedAmens),
+    chatMessages: cloneSeed(seedChatMessages),
+    chatReads: [],
     nextIds: {
       member: seedMembers.length + 1,
       room: seedRooms.length + 1,
@@ -32,6 +35,7 @@ function createSeedState() {
       checkIn: seedCheckIns.length + 1,
       detail: seedCheckInDetails.length + 1,
       amen: seedAmens.length + 1,
+      message: seedChatMessages.length + 1,
     },
   };
 }
@@ -44,6 +48,8 @@ function getPersistedPayload(store) {
     checkIns: store.checkIns,
     checkInDetails: store.checkInDetails,
     amens: store.amens,
+    chatMessages: store.chatMessages,
+    chatReads: store.chatReads,
     nextIds: store.nextIds,
     members: store.members,
   };
@@ -114,7 +120,12 @@ function initializeStore() {
     checkIns: persisted.checkIns ?? seed.checkIns,
     checkInDetails: persisted.checkInDetails ?? seed.checkInDetails,
     amens: persisted.amens ?? seed.amens,
-    nextIds: persisted.nextIds ?? seed.nextIds,
+    chatMessages: persisted.chatMessages ?? seed.chatMessages,
+    chatReads: persisted.chatReads ?? seed.chatReads,
+    nextIds: {
+      ...seed.nextIds,
+      ...(persisted.nextIds ?? {}),
+    },
   };
 
   const shouldPersist =

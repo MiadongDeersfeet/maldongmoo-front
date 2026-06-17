@@ -1,47 +1,122 @@
 .landing-page {
-  width: 100%;
-  min-height: auto;
-  display: flex;
-  justify-content: center;
-  padding: 0;
-  background-color: #eef3f8;
+  min-height: 100dvh;
+  background: #f7f6f1;
+  font-family: var(--font-family);
 }
 
-.landing-image-wrapper {
+.landing-page__shell {
   position: relative;
   width: 100%;
-  max-width: 480px;
+  max-width: var(--app-max-width);
+  min-height: 100dvh;
   margin: 0 auto;
-  line-height: 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 1.5rem) var(--space-page-x)
+    calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+  display: flex;
+  flex-direction: column;
 }
 
-.landing-reference-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 28px;
-}
-
-.landing-kakao-overlay-button {
+.landing-leaf-deco {
   position: absolute;
-  left: 7%;
-  right: 7%;
-  bottom: 7.5%;
-  height: 6.5%;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+  right: 0.25rem;
+  width: 7.5rem;
+  height: auto;
+  pointer-events: none;
 }
 
-.landing-kakao-overlay-button:focus-visible {
-  outline: 2px solid rgba(0, 0, 0, 0.35);
-  outline-offset: 2px;
+.landing-brand-icon {
+  width: 7.5rem;
+  height: auto;
+  margin-bottom: 1.25rem;
 }
 
-@media (max-width: 480px) {
-  .landing-reference-image {
-    border-radius: 0;
-  }
+.landing-page__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 0 1.5rem;
+}
+
+.landing-page__title {
+  margin: 0 0 0.75rem;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #3d6b5c;
+  line-height: 1.2;
+}
+
+.landing-page__caption {
+  margin: 0 0 2.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: #6b7a73;
+}
+
+.landing-page__actions {
+  width: 100%;
+  max-width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.landing-page__kakao-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-kakao);
+  color: var(--color-kakao-text);
+  font-size: 1rem;
+  font-weight: 700;
+  transition: transform var(--transition-fast);
+}
+
+.landing-page__kakao-btn:active {
+  transform: scale(0.98);
+}
+
+.landing-page__kakao-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.landing-page__alt-btn {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid #d8e3dc;
+  background: #ffffff;
+  color: #4a5c54;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.landing-page__alt-btn:active {
+  background: #f3f8f4;
+  transform: scale(0.98);
+}
+
+.landing-page__legal {
+  margin: 0;
+  padding-top: 1rem;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: #9aa8a2;
+  text-align: center;
 }

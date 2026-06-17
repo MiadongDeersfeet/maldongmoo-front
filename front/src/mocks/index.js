@@ -5,4 +5,5 @@ export * from './services/mockSectionService.js';
 export * from './services/mockCheckInService.js';
 export * from './services/mockFeedService.js';
 export * from './services/mockHomeService.js';
+export * from './services/mockChatService.js';
 export * from './utils/inviteCode.js';

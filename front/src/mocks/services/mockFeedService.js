@@ -42,7 +42,7 @@ export function getRoomFeed(roomId, currentMemberId) {
 
     if (details.length === 0) return;
 
-    const earliestTime = details[0]?.createdAt ?? '';
+    const latestTime = details[details.length - 1]?.createdAt ?? '';
 
     const card = {
       checkInId: checkIn.checkInId,
@@ -52,7 +52,7 @@ export function getRoomFeed(roomId, currentMemberId) {
       amenCount: getAmenCount(checkIn.checkInId),
       isAmenedByMe: isAmenedByMe(checkIn.checkInId, currentMemberId),
       details,
-      sortTime: earliestTime,
+      sortTime: latestTime,
     };
 
     if (!byDate.has(checkIn.checkInDate)) {
