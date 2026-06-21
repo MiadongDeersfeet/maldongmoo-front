@@ -1,0 +1,28 @@
+.section-editor-modal__textarea {
+  width: 100%;
+  min-height: 10rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-card-soft);
+  color: var(--color-text-main);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.section-editor-modal__textarea:focus {
+  outline: none;
+  border-color: rgba(63, 143, 122, 0.45);
+  box-shadow: 0 0 0 3px rgba(207, 237, 227, 0.65);
+}
+
+.section-editor-modal__textarea:disabled {
+  opacity: 0.7;
+}
+
+.section-editor-modal__error {
+  margin: 0 0 0.75rem;
+  color: var(--color-warning-text);
+  font-size: 0.875rem;
+}

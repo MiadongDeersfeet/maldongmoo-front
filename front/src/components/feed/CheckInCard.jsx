@@ -1,9 +1,26 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Play } from 'lucide-react';
 import AvatarCircle from '@/components/ui/AvatarCircle.jsx';
 import { getRoomRole } from '@/mocks/index.js';
+import { resolveAudioUrl } from '@/utils/audioUrl.js';
 import AmenButton from './AmenButton.jsx';
 import './CheckInCard.css';
+
+let activeAudio = null;
+let activeResetPlayingState = null;
+
+function stopSharedAudio() {
+  if (activeAudio) {
+    activeAudio.pause();
+    activeAudio.currentTime = 0;
+    activeAudio = null;
+  }
+
+  if (activeResetPlayingState) {
+    activeResetPlayingState();
+    activeResetPlayingState = null;
+  }
+}
 
 function formatTime(createdAt) {
   const hour = Number(createdAt.slice(11, 13));
@@ -58,12 +75,77 @@ function buildDisplayRows(details) {
 
 function VoicePlayButton({ audioUrl }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+  const isMountedRef = useRef(true);
 
-  const handlePlay = () => {
-    console.log('[mock] play voice recording', audioUrl);
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+
+        if (activeAudio === audioRef.current) {
+          activeAudio = null;
+          activeResetPlayingState = null;
+        }
+
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const handlePlay = useCallback(() => {
+    const resolvedUrl = resolveAudioUrl(audioUrl);
+    if (!resolvedUrl) {
+      return;
+    }
+
+    stopSharedAudio();
+
+    const audio = new Audio(resolvedUrl);
+    audioRef.current = audio;
+    activeAudio = audio;
+    activeResetPlayingState = () => {
+      if (isMountedRef.current) {
+        setIsPlaying(false);
+      }
+    };
+
+    const handleEnded = () => {
+      if (isMountedRef.current) {
+        setIsPlaying(false);
+      }
+
+      if (activeAudio === audio) {
+        activeAudio = null;
+        activeResetPlayingState = null;
+      }
+
+      audioRef.current = null;
+    };
+
+    const handleError = () => {
+      if (isMountedRef.current) {
+        setIsPlaying(false);
+      }
+
+      if (activeAudio === audio) {
+        activeAudio = null;
+        activeResetPlayingState = null;
+      }
+
+      audioRef.current = null;
+    };
+
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
     setIsPlaying(true);
-    window.setTimeout(() => setIsPlaying(false), 1200);
-  };
+    audio.play().catch(handleError);
+  }, [audioUrl]);
 
   return (
     <button
@@ -82,7 +164,7 @@ function DetailRow({ row }) {
     return (
       <div className="feed-card__detail-row">
         <span className="feed-card__badge">녹음 인증</span>
-        <VoicePlayButton audioUrl={row.detail.audioUrl} />
+        <VoicePlayButton audioUrl={row.detail.audioUrl ?? row.detail.voiceFileUrl} />
       </div>
     );
   }
@@ -108,6 +190,8 @@ export default function CheckInCard({
   const latestDetail = card.details[card.details.length - 1];
   const timeLabel = latestDetail ? formatTime(latestDetail.createdAt) : '';
 
+  const isAmenedByMe = card.isAmenedByMe === true || card.amenedByMe === true;
+
   if (variant === 'timeline') {
     return (
       <article className={`feed-card feed-card--timeline ${isOwnCard ? 'feed-card--own' : ''}`}>
@@ -126,9 +210,8 @@ export default function CheckInCard({
         </div>
         <AmenButton
           amenCount={card.amenCount}
-          isAmenedByMe={card.isAmenedByMe}
-          disabled={isOwnCard}
-          onToggle={() => onAmenToggle(card.checkInId)}
+          isAmenedByMe={isAmenedByMe}
+          onToggle={() => onAmenToggle(card)}
           variant="pill"
         />
       </article>
@@ -150,9 +233,8 @@ export default function CheckInCard({
       </div>
       <AmenButton
         amenCount={card.amenCount}
-        isAmenedByMe={card.isAmenedByMe}
-        disabled={isOwnCard}
-        onToggle={() => onAmenToggle(card.checkInId)}
+        isAmenedByMe={isAmenedByMe}
+        onToggle={() => onAmenToggle(card)}
       />
     </article>
   );

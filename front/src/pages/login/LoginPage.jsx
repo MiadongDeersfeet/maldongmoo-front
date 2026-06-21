@@ -1,50 +1,30 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { redirectToKakaoLogin } from '@/api/authApi.js';
 import AppShell from '@/components/layout/AppShell.jsx';
 import PageContainer from '@/components/layout/PageContainer.jsx';
-import AvatarCircle from '@/components/ui/AvatarCircle.jsx';
 import { useAuth } from '@/hooks/useAuth.js';
-import { seedMembers } from '@/mocks/data/members.js';
 import './LoginPage.css';
-const MOCK_PROFILES = seedMembers.filter((m) => m.status === 'Y').slice(0, 3);
+
+function KakaoIcon() {
+  return (
+    <svg
+      className="login-page__kakao-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.87 5.34 4.68 6.84-.15.55-.54 2-.62 2.32 0 0-.01.08.05.12.07.04.15.03.22-.01.97-.67 3.82-2.52 4.42-2.95.72.1 1.46.16 2.25.16 5.52 0 10-3.58 10-8.08S17.52 3 12 3z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
 
 export default function LoginPage() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
+  const { authError } = useAuth();
 
-  const handleMockLogin = async (profile) => {
-    setError('');
-    try {
-      await login({
-        kakaoId: profile.kakaoId,
-        name: profile.name,
-        profileImg: profile.profileImg,
-      });
-      navigate('/home', { replace: true });
-    } catch {
-      setError('로그인에 실패했습니다.');
-    }
-  };
-
-  const handleCustomLogin = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      setError('실명을 입력해 주세요.');
-      return;
-    }
-    setError('');
-    try {
-      await login({
-        kakaoId: `kakao_mock_${Date.now()}`,
-        name: name.trim(),
-        profileImg: null,
-      });
-      navigate('/home', { replace: true });
-    } catch {
-      setError('로그인에 실패했습니다.');
-    }
+  const handleKakaoLogin = () => {
+    redirectToKakaoLogin();
   };
 
   return (
@@ -52,50 +32,27 @@ export default function LoginPage() {
       <PageContainer>
         <div className="login-page">
           <p className="login-page__intro">
-            카카오 로그인 후 앱에서 사용할 실명을 확인합니다.
+            카카오 계정으로 로그인하고 말동무 암송방에 참여해 보세요.
           </p>
 
-          <div className="login-page__profiles">
-            {MOCK_PROFILES.map((profile) => (
-              <button
-                key={profile.kakaoId}
-                type="button"
-                className="login-page__profile-btn"
-                onClick={() => handleMockLogin(profile)}
-              >
-                <AvatarCircle
-                  name={profile.name}
-                  profileImg={profile.profileImg}
-                  size="sm"
-                  className="login-page__profile-avatar"
-                />
-                <span>{profile.name}으로 시작</span>
-              </button>
-            ))}
-          </div>
+          <button
+            type="button"
+            className="login-page__kakao-btn"
+            onClick={handleKakaoLogin}
+          >
+            <KakaoIcon />
+            카카오로 시작하기
+          </button>
 
-          <div className="login-page__divider">
-            <span>또는</span>
-          </div>
+          {authError && (
+            <p className="login-page__error" role="alert">
+              {authError}
+            </p>
+          )}
 
-          <form className="login-page__form" onSubmit={handleCustomLogin}>
-            <label htmlFor="name">실명</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="앱에서 사용할 이름"
-              maxLength={20}
-            />
-            <button type="submit" className="login-page__submit">
-              이름으로 시작 (신규)
-            </button>
-          </form>
-
-          {error && <p className="login-page__error" role="alert">{error}</p>}
-
-          <p className="login-page__notice">MVP mock 로그인 · 실제 카카오 OAuth 미연결</p>
+          <p className="login-page__notice">
+            로그인 후 세션 쿠키로 인증 상태가 유지됩니다.
+          </p>
         </div>
       </PageContainer>
     </AppShell>

@@ -11,6 +11,7 @@ export default function RoomHeader({
   memberCount,
   todayCompletedCount = 0,
   onBack,
+  onMoreClick,
 }) {
   return (
     <header className="room-header">
@@ -21,7 +22,13 @@ export default function RoomHeader({
         <h1 className="room-header__title">{roomName}</h1>
         <p className="room-header__subtitle">{getSubtitle(todayCompletedCount, memberCount)}</p>
       </div>
-      <button type="button" className="room-header__more" aria-label="더보기" disabled>
+      <button
+        type="button"
+        className="room-header__more"
+        aria-label="더보기"
+        onClick={onMoreClick}
+        disabled={!onMoreClick}
+      >
         <MoreVertical size={20} strokeWidth={2} />
       </button>
     </header>

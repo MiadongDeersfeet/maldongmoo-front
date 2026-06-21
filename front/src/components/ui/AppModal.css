@@ -1,0 +1,130 @@
+.app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-page-x);
+  pointer-events: none;
+}
+
+.app-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(31, 52, 48, 0.32);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+  animation: app-modal-backdrop-in var(--transition-normal);
+}
+
+.app-modal__card {
+  position: relative;
+  width: 100%;
+  max-width: min(var(--app-max-width), 100%);
+  max-height: min(88dvh, 640px);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+  pointer-events: auto;
+  animation: app-modal-card-in var(--transition-normal);
+}
+
+.app-modal__header {
+  padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.app-modal__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  line-height: 1.4;
+}
+
+.app-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 1.25rem 1rem;
+  color: var(--color-text-sub);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.app-modal__footer {
+  display: flex;
+  gap: 0.625rem;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.app-modal__btn {
+  flex: 1;
+  min-height: var(--touch-min);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+}
+
+.app-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.app-modal__btn--secondary {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.app-modal__btn--secondary:active:not(:disabled) {
+  background: var(--color-accent-mint);
+}
+
+.app-modal__btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.app-modal__btn--primary:active:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.app-modal__btn--danger {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.app-modal__btn--danger:active:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.app-modal__body p {
+  margin: 0;
+}
+
+.app-modal__body p + p {
+  margin-top: 0.75rem;
+}
+
+@keyframes app-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes app-modal-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

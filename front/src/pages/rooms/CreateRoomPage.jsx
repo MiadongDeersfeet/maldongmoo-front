@@ -3,10 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '@/components/layout/AppShell.jsx';
 import PageContainer from '@/components/layout/PageContainer.jsx';
 import MemberProfileStrip from '@/components/ui/MemberProfileStrip.jsx';
-import { useAuth } from '@/hooks/useAuth.js';import { createRoom } from '@/mocks/index.js';
+import { useAuth } from '@/hooks/useAuth.js';
+import { createRoom } from '@/api/roomApi.js';
+import { ApiError } from '@/api/apiClient.js';
 import './RoomFormPage.css';
 
 const MEMBER_LIMIT_OPTIONS = [5, 10, 15, 20];
+
+function getSubmitErrorMessage(error, fallback) {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  return fallback;
+}
 
 export default function CreateRoomPage() {
   const navigate = useNavigate();
@@ -14,9 +23,14 @@ export default function CreateRoomPage() {
   const [roomName, setRoomName] = useState('');
   const [memberLimit, setMemberLimit] = useState(10);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
 
     if (!roomName.trim()) {
       setError('암송방 이름을 입력해 주세요.');
@@ -24,14 +38,18 @@ export default function CreateRoomPage() {
     }
 
     setError('');
+    setIsSubmitting(true);
+
     try {
-      const room = createRoom(
-        { roomName: roomName.trim(), memberLimit },
-        member.memberId,
-      );
-      navigate(`/rooms/${room.roomId}`, { replace: true });
+      await createRoom({
+        roomName: roomName.trim(),
+        memberLimit,
+      });
+      navigate('/home', { replace: true });
     } catch (err) {
-      setError(err.message || '암송방 생성에 실패했습니다.');
+      setError(getSubmitErrorMessage(err, '암송방 생성에 실패했습니다.'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -44,7 +62,8 @@ export default function CreateRoomPage() {
             profileImg={member.profileImg}
             subtitle="방장으로 생성"
             className="room-form-page__profile"
-          />          <p className="room-form-page__intro">
+          />
+          <p className="room-form-page__intro">
             새 암송방을 만들고 함께할 멤버를 초대해 보세요.
           </p>
 
@@ -58,6 +77,7 @@ export default function CreateRoomPage() {
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="예: 요한복음 암송방"
                 maxLength={40}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -67,6 +87,7 @@ export default function CreateRoomPage() {
                 id="memberLimit"
                 value={memberLimit}
                 onChange={(e) => setMemberLimit(Number(e.target.value))}
+                disabled={isSubmitting}
               >
                 {MEMBER_LIMIT_OPTIONS.map((limit) => (
                   <option key={limit} value={limit}>
@@ -80,8 +101,12 @@ export default function CreateRoomPage() {
               암송 본문은 방을 만든 후 방 상세 화면에서 등록할 수 있어요.
             </p>
 
-            <button type="submit" className="room-form__submit">
-              암송방 만들기
+            <button
+              type="submit"
+              className="room-form__submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? '만드는 중...' : '암송방 만들기'}
             </button>
 
             {error && (

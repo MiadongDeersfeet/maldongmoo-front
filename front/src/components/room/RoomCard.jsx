@@ -1,19 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Copy } from 'lucide-react';
-import AvatarCircle from '@/components/ui/AvatarCircle.jsx';
+import { Copy } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge.jsx';
+import RoomProfileStack from '@/components/room/RoomProfileStack.jsx';
 import './RoomCard.css';
-
-const ROOM_ICON_VARIANTS = ['mint', 'tan', 'sage'];
-const VISIBLE_AVATAR_COUNT = 2;
 
 export default function RoomCard({ roomData }) {
   const navigate = useNavigate();
-  const { room, memberCount, isTodayCompleted, roomRole, participants = [] } = roomData;
+  const { room, memberCount = 0, isTodayCompleted, roomRole, participants = [] } = roomData;
   const isLeader = roomRole === 'LEADER';
-  const iconVariant = ROOM_ICON_VARIANTS[room.roomId % ROOM_ICON_VARIANTS.length];
-  const visibleParticipants = participants.slice(0, VISIBLE_AVATAR_COUNT);
-  const extraParticipant = participants[VISIBLE_AVATAR_COUNT] ?? null;
+  const canCopyInviteCode = Boolean(room.inviteCode);
+  const profileParticipants = participants.slice(0, 4);
 
   const handleEnter = () => {
     navigate(`/rooms/${room.roomId}`);
@@ -21,6 +17,8 @@ export default function RoomCard({ roomData }) {
 
   const handleCopyInvite = async (e) => {
     e.stopPropagation();
+    if (!room.inviteCode) return;
+
     try {
       await navigator.clipboard.writeText(room.inviteCode);
     } catch {
@@ -32,9 +30,7 @@ export default function RoomCard({ roomData }) {
     <article className="room-card">
       <div className="room-card__header">
         <div className="room-card__main">
-          <div className={`room-card__icon-tile room-card__icon-tile--${iconVariant}`} aria-hidden="true">
-            <BookOpen size={20} strokeWidth={2} />
-          </div>
+          <RoomProfileStack participants={profileParticipants} />
           <div className="room-card__title-block">
             <h2 className="room-card__title">{room.roomName}</h2>
             <span className={`room-card__role-badge room-card__role-badge--${roomRole.toLowerCase()}`}>
@@ -51,29 +47,11 @@ export default function RoomCard({ roomData }) {
 
       <div className="room-card__meta-row">
         <div className="room-card__member-summary">
-          {visibleParticipants.length > 0 && (
-            <div className="room-card__avatars" aria-hidden="true">
-              {visibleParticipants.map((participant) => (
-                <AvatarCircle
-                  key={participant.memberId}
-                  name={participant.name}
-                  profileImg={participant.profileImg}
-                  size="sm"
-                  className="room-card__avatar"
-                />
-              ))}
-            </div>
-          )}
-          {extraParticipant && (
-            <span className="room-card__member-chip">
-              {extraParticipant.name?.charAt(0) ?? '?'}
-            </span>
-          )}
           <span className="room-card__member-count">
-            {memberCount}/{room.memberLimit}명
+            {memberCount}/{room.memberLimit ?? 0}명
           </span>
         </div>
-        {isLeader && (
+        {canCopyInviteCode && (
           <button
             type="button"
             className="room-card__invite-copy"
