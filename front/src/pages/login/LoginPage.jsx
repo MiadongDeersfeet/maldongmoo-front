@@ -51,7 +51,7 @@ export default function LoginPage() {
           )}
 
           <p className="login-page__notice">
-            로그인 후 세션 쿠키로 인증 상태가 유지됩니다.
+            카카오 프로필 이름으로 가입·로그인됩니다. 로그인 후 세션 쿠키로 인증 상태가 유지됩니다.
           </p>
         </div>
       </PageContainer>

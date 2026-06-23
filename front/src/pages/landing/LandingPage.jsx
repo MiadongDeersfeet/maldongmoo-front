@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { redirectToKakaoLogin } from '@/api/authApi.js';
 import LandingBrandIcon from '@/components/onboarding/LandingBrandIcon.jsx';
 import LandingLeafDeco from '@/components/onboarding/LandingLeafDeco.jsx';
 import './LandingPage.css';
@@ -15,14 +15,8 @@ function KakaoIcon() {
 }
 
 export default function LandingPage() {
-  const navigate = useNavigate();
-
   const handleKakaoStart = () => {
-    navigate('/onboarding/name');
-  };
-
-  const handleAltLogin = () => {
-    navigate('/login');
+    redirectToKakaoLogin();
   };
 
   return (
@@ -43,9 +37,6 @@ export default function LandingPage() {
             <button type="button" className="landing-page__kakao-btn" onClick={handleKakaoStart}>
               <KakaoIcon />
               카카오로 시작하기
-            </button>
-            <button type="button" className="landing-page__alt-btn" onClick={handleAltLogin}>
-              다른 방법으로 로그인
             </button>
           </div>
         </div>

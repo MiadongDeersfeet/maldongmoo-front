@@ -2,10 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AuthContext } from '@/hooks/useAuth.js';
 import { getMe, logout as logoutApi } from '@/api/authApi.js';
 import { ApiError } from '@/api/apiClient.js';
-import {
-  findOrCreateMember,
-  getMemberById,
-} from '@/mocks/index.js';
 
 /**
  * Maps backend /api/me fields to the member shape used across the UI.
@@ -71,17 +67,6 @@ export function AuthProvider({ children }) {
     };
   }, [refreshSession]);
 
-  /**
-   * Mock-only login for pages not yet migrated to real API (e.g. NameEntryPage).
-   * Does not create a server session.
-   */
-  const login = useCallback(async ({ kakaoId, name, profileImg = null }) => {
-    const loggedIn = findOrCreateMember({ kakaoId, name, profileImg });
-    const fresh = getMemberById(loggedIn.memberId) ?? loggedIn;
-    setMember({ ...fresh });
-    return fresh;
-  }, []);
-
   const logout = useCallback(async () => {
     try {
       await logoutApi();
@@ -102,10 +87,9 @@ export function AuthProvider({ children }) {
       isLoading,
       authError,
       refreshSession,
-      login,
       logout,
     }),
-    [member, isLoading, authError, refreshSession, login, logout],
+    [member, isLoading, authError, refreshSession, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,7 +3,6 @@ import AuthGuard from '@/components/layout/AuthGuard.jsx';
 import GuestOnly from '@/components/layout/GuestOnly.jsx';
 import LandingPage from '@/pages/landing/LandingPage.jsx';
 import LoginPage from '@/pages/login/LoginPage.jsx';
-import NameEntryPage from '@/pages/onboarding/NameEntryPage.jsx';
 import HomePage from '@/pages/home/HomePage.jsx';
 import CreateRoomPage from '@/pages/rooms/CreateRoomPage.jsx';
 import JoinRoomPage from '@/pages/rooms/JoinRoomPage.jsx';
@@ -22,11 +21,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/onboarding/name',
-    element: (
-      <GuestOnly>
-        <NameEntryPage />
-      </GuestOnly>
-    ),
+    element: <Navigate to="/login" replace />,
   },
   {
     path: '/login',

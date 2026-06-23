@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { redirectToKakaoLogin } from '@/api/authApi.js';
 import './KakaoLoginButton.css';
 
 function KakaoIcon() {
@@ -18,13 +18,11 @@ function KakaoIcon() {
 }
 
 export default function KakaoLoginButton() {
-  const navigate = useNavigate();
-
   return (
     <button
       type="button"
       className="kakao-login-button"
-      onClick={() => navigate('/login')}
+      onClick={() => redirectToKakaoLogin()}
     >
       <KakaoIcon />
       카카오로 시작하기

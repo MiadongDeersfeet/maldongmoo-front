@@ -1,7 +1,24 @@
 import apiClient, { unwrapApiData } from '@/api/apiClient.js';
 
-/** Kakao OAuth2 login entry (Spring Security default). */
-export const KAKAO_LOGIN_URL = '/oauth2/authorization/kakao';
+const KAKAO_OAUTH_PATH = '/oauth2/authorization/kakao';
+
+/** Absolute Kakao OAuth start URL (uses VITE_API_BASE_URL when set). */
+export function getKakaoLoginUrl() {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? '';
+
+  if (!baseUrl) {
+    return KAKAO_OAUTH_PATH;
+  }
+
+  return `${baseUrl}${KAKAO_OAUTH_PATH}`;
+}
+
+/**
+ * Redirects the browser to Kakao OAuth login on the API origin.
+ */
+export function redirectToKakaoLogin() {
+  window.location.href = getKakaoLoginUrl();
+}
 
 /**
  * @typedef {Object} MeResponse
@@ -18,13 +35,6 @@ export const KAKAO_LOGIN_URL = '/oauth2/authorization/kakao';
  * @property {string} parameterName
  * @property {string} token
  */
-
-/**
- * Redirects the browser to Kakao OAuth login.
- */
-export function redirectToKakaoLogin() {
-  window.location.href = KAKAO_LOGIN_URL;
-}
 
 /**
  * @returns {Promise<CsrfTokenResponse>}
