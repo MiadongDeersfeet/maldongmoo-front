@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Client } from '@stomp/stompjs';
-
-function buildWebSocketUrl() {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.host}/ws`;
-}
+import { buildWebSocketUrl } from '@/utils/websocketUrl.js';
 
 /**
  * @param {number | null | undefined} roomId
