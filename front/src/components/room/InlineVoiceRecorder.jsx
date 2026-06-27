@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Mic, Pause, Play, Send, X } from 'lucide-react';
 import { playRecordingStartSound, playRecordingStopSound } from '@/utils/recordingFeedbackSound.js';
 import { createVoiceUploadFile, MAX_VOICE_UPLOAD_BYTES } from '@/utils/voiceFile.js';
+import { useScreenWakeLock } from '@/hooks/useScreenWakeLock.js';
 import './InlineCheckInPanel.css';
 import './InlineVoiceRecorder.css';
 
@@ -132,6 +133,15 @@ export default function InlineVoiceRecorder({ onCancel, onComplete, isSubmitting
   const analyserRef = useRef(null);
   const waveHistoryRef = useRef(createIdleBarLevels());
   const levelAnimationRef = useRef(null);
+
+  const keepScreenAwake = isRecording
+    && !isPaused
+    && !errorMessage
+    && !hasReachedMaxDuration
+    && !isFinalizing
+    && !isSubmitting;
+
+  useScreenWakeLock(keepScreenAwake);
 
   const closeAudioAnalysis = useCallback(() => {
     if (levelAnimationRef.current) {
