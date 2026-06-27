@@ -6,9 +6,9 @@ import { chromium } from 'playwright';
 
 const BASE_URL = process.env.APP_URL || 'http://localhost:5173';
 
-async function loginAs(page, profileName) {
-  await page.goto(`${BASE_URL}/login`);
-  await page.getByRole('button', { name: `${profileName}으로 시작` }).click();
+async function loginAsTestAccount(page, label) {
+  await page.goto(`${BASE_URL}/`);
+  await page.getByRole('button', { name: label }).click();
   await page.waitForURL('**/home');
 }
 
@@ -18,7 +18,7 @@ async function main() {
 
   await page.goto(BASE_URL);
   await page.evaluate(() => localStorage.clear());
-  await loginAs(page, '김윤기');
+  await loginAsTestAccount(page, '테스트 A (방장)');
 
   await page.waitForSelector('.home-summary__count');
   const countText = await page.locator('.home-summary__count').textContent();

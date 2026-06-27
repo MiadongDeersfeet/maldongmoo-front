@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AuthGuard from '@/components/layout/AuthGuard.jsx';
 import GuestOnly from '@/components/layout/GuestOnly.jsx';
 import LandingPage from '@/pages/landing/LandingPage.jsx';
-import LoginPage from '@/pages/login/LoginPage.jsx';
 import HomePage from '@/pages/home/HomePage.jsx';
 import CreateRoomPage from '@/pages/rooms/CreateRoomPage.jsx';
 import JoinRoomPage from '@/pages/rooms/JoinRoomPage.jsx';
@@ -35,15 +34,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/onboarding/name',
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/" replace />,
   },
   {
     path: '/login',
-    element: (
-      <GuestOnly>
-        <LoginPage />
-      </GuestOnly>
-    ),
+    element: <Navigate to="/" replace />,
   },
   {
     path: '/home',

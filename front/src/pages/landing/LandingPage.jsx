@@ -1,4 +1,8 @@
-import { redirectToKakaoLogin } from '@/api/authApi.js';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { loginAsTestAccount, redirectToKakaoLogin } from '@/api/authApi.js';
+import { useAuth } from '@/hooks/useAuth.js';
+import { isLocalDevEnvironment } from '@/utils/env.js';
 import './LandingPage.css';
 
 function KakaoIcon() {
@@ -12,9 +16,39 @@ function KakaoIcon() {
   );
 }
 
+const TEST_ACCOUNTS = [
+  { key: 'a', label: '테스트 A (방장)' },
+  { key: 'b', label: '테스트 B (멤버)' },
+];
+
 export default function LandingPage() {
+  const navigate = useNavigate();
+  const { authError, refreshSession } = useAuth();
+  const [testLoginError, setTestLoginError] = useState(null);
+  const [pendingAccountKey, setPendingAccountKey] = useState(null);
+  const showTestLogin = isLocalDevEnvironment();
+
   const handleKakaoStart = () => {
     redirectToKakaoLogin();
+  };
+
+  const handleTestLogin = async (accountKey) => {
+    setTestLoginError(null);
+    setPendingAccountKey(accountKey);
+
+    try {
+      await loginAsTestAccount(accountKey);
+      await refreshSession();
+      navigate('/home', { replace: true });
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : '테스트 계정 로그인에 실패했습니다.';
+      setTestLoginError(message);
+    } finally {
+      setPendingAccountKey(null);
+    }
   };
 
   return (
@@ -50,12 +84,43 @@ export default function LandingPage() {
         </div>
 
         <div className="landing-page__footer">
+          {showTestLogin && (
+            <div className="landing-page__test-panel">
+              <p className="landing-page__test-title">로컬 테스트 계정</p>
+              <p className="landing-page__test-desc">
+                2계정 채팅 테스트: 일반 창에서 A, 시크릿 창에서 B로 접속하세요.
+              </p>
+              <div className="landing-page__test-buttons">
+                {TEST_ACCOUNTS.map((account) => (
+                  <button
+                    key={account.key}
+                    type="button"
+                    className="landing-page__test-btn"
+                    disabled={pendingAccountKey !== null}
+                    onClick={() => handleTestLogin(account.key)}
+                  >
+                    {pendingAccountKey === account.key ? '접속 중...' : account.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button type="button" className="landing-page__kakao-btn" onClick={handleKakaoStart}>
             <KakaoIcon />
             카카오로 시작하기
           </button>
+
+          {(authError || testLoginError) && (
+            <p className="landing-page__error" role="alert">
+              {testLoginError ?? authError}
+            </p>
+          )}
+
           <p className="landing-page__legal">
-            로그인 시 서비스 이용약관 및 개인정보 처리방침에 동의한 것으로 간주합니다.
+            {showTestLogin
+              ? '테스트 계정은 localhost + local API에서만 사용할 수 있습니다.'
+              : '로그인 시 서비스 이용약관 및 개인정보 처리방침에 동의한 것으로 간주합니다.'}
           </p>
         </div>
       </div>

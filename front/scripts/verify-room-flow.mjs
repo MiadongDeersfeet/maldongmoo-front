@@ -7,9 +7,9 @@ import { chromium } from 'playwright';
 
 const BASE_URL = process.env.APP_URL || 'http://localhost:5173';
 
-async function loginAs(page, profileName) {
-  await page.goto(`${BASE_URL}/login`);
-  await page.getByRole('button', { name: `${profileName}으로 시작` }).click();
+async function loginAsTestAccount(page, label) {
+  await page.goto(`${BASE_URL}/`);
+  await page.getByRole('button', { name: label }).click();
   await page.waitForURL('**/home');
 }
 
@@ -24,7 +24,7 @@ async function main() {
   });
 
   console.log('1. Login as 김윤기');
-  await loginAs(page, '김윤기');
+  await loginAsTestAccount(page, '테스트 A (방장)');
 
   console.log('2. Create room');
   await page.goto(`${BASE_URL}/rooms/new`);
@@ -63,7 +63,7 @@ async function main() {
 
   console.log('6. Login as 이준호 and join via invite code');
   await page.evaluate(() => localStorage.removeItem('mock_member_id'));
-  await loginAs(page, '이준호');
+  await loginAsTestAccount(page, '테스트 B (멤버)');
   await page.goto(`${BASE_URL}/rooms/join`);
   await page.getByLabel('초대코드').fill(invite);
   await page.getByRole('button', { name: '입장하기' }).click();
