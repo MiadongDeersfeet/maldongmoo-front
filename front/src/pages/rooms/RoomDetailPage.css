@@ -17,7 +17,9 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  height: 100svh;
   max-height: 100dvh;
+  max-height: 100svh;
   overflow: hidden;
   background:
     radial-gradient(circle at top right, rgba(207, 237, 227, 0.55), transparent 260px),
@@ -26,30 +28,12 @@
 
 html.chat-composer-active,
 html.chat-composer-active body {
-  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 html.chat-keyboard-open,
 html.chat-keyboard-open body {
   overscroll-behavior: none;
-}
-
-html.chat-keyboard-open .room-detail-shell {
-  position: fixed;
-  top: var(--visual-viewport-offset-top, 0px);
-  left: 0;
-  right: 0;
-  margin-inline: auto;
-  width: 100%;
-  max-width: var(--app-max-width);
-  height: var(--visual-viewport-height, 100dvh);
-  max-height: var(--visual-viewport-height, 100dvh);
-  z-index: 20;
-}
-
-html.chat-keyboard-open .app-page:has(.room-detail-shell) {
-  height: var(--visual-viewport-height, 100dvh);
-  overflow: hidden;
 }
 
 .room-detail-body {

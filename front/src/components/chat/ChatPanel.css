@@ -44,6 +44,10 @@ html.chat-keyboard-open .chat-panel--dedicated .chat-scroll-area__bottom-spacer 
   height: 0;
 }
 
+.chat-panel--keyboard-open .chat-scroll-area__content {
+  min-height: auto;
+}
+
 .chat-panel--dedicated.chat-panel--no-input .chat-scroll-area__bottom-spacer {
   height: 1rem;
 }

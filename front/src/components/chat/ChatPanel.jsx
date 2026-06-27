@@ -7,6 +7,10 @@ import './ChatPanel.css';
 
 const KEYBOARD_OPEN_THRESHOLD_PX = 40;
 
+function isKeyboardVisible(viewportInset) {
+  return viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
+}
+
 export default function ChatPanel({
   chatFeed,
   currentMemberId,
@@ -21,74 +25,52 @@ export default function ChatPanel({
   dedicatedLayout = false,
 }) {
   const [reactionPickerMessageId, setReactionPickerMessageId] = useState(null);
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const wasKeyboardOpenRef = useRef(false);
   const inputRef = useRef(null);
   const suppressBlurRef = useRef(false);
   const keyboardAware = Boolean(showInput && dedicatedLayout);
   const viewportInset = useVisualViewportInset(keyboardAware);
+  const keyboardVisible = keyboardAware && isKeyboardVisible(viewportInset);
   const isEmpty = chatFeed.length === 0;
   const panelClassName = [
     'chat-panel',
     dedicatedLayout ? 'chat-panel--dedicated' : '',
     isInlineActive ? 'chat-panel--inline-active' : '',
     showInput ? '' : 'chat-panel--no-input',
+    keyboardVisible ? 'chat-panel--keyboard-open' : '',
   ]
     .filter(Boolean)
     .join(' ');
 
-  const setKeyboardOpenClass = useCallback((open) => {
+  const syncKeyboardDocumentState = useCallback((open) => {
     document.documentElement.classList.toggle('chat-keyboard-open', open);
+    document.documentElement.classList.toggle('chat-composer-active', open);
   }, []);
 
   useEffect(() => {
     if (!keyboardAware) {
+      syncKeyboardDocumentState(false);
       return undefined;
     }
 
-    document.documentElement.classList.add('chat-composer-active');
+    syncKeyboardDocumentState(keyboardVisible);
 
     return () => {
-      document.documentElement.classList.remove('chat-composer-active');
-      document.documentElement.classList.remove('chat-keyboard-open');
-      document.documentElement.style.removeProperty('--visual-viewport-height');
-      document.documentElement.style.removeProperty('--visual-viewport-offset-top');
+      syncKeyboardDocumentState(false);
       document.documentElement.style.removeProperty('--keyboard-inset');
     };
-  }, [keyboardAware]);
-
-  useEffect(() => {
-    if (!keyboardAware || viewportInset.height == null) {
-      return;
-    }
-
-    document.documentElement.style.setProperty(
-      '--visual-viewport-height',
-      `${viewportInset.height}px`,
-    );
-    document.documentElement.style.setProperty(
-      '--visual-viewport-offset-top',
-      `${viewportInset.offsetTop}px`,
-    );
-    document.documentElement.style.setProperty(
-      '--keyboard-inset',
-      `${viewportInset.bottom}px`,
-    );
-  }, [keyboardAware, viewportInset.height, viewportInset.offsetTop, viewportInset.bottom]);
+  }, [keyboardAware, keyboardVisible, syncKeyboardDocumentState]);
 
   useEffect(() => {
     if (!keyboardAware) {
       return;
     }
 
-    const keyboardVisible = viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
-    if (keyboardVisible || isInputFocused) {
-      setKeyboardOpenClass(true);
-      return;
-    }
-
-    setKeyboardOpenClass(false);
-  }, [keyboardAware, isInputFocused, viewportInset.bottom, setKeyboardOpenClass]);
+    document.documentElement.style.setProperty(
+      '--keyboard-inset',
+      `${viewportInset.bottom}px`,
+    );
+  }, [keyboardAware, viewportInset.bottom]);
 
   const pinChatToBottom = useCallback((behavior = 'auto') => {
     const scrollElement = chatScrollRef?.current;
@@ -107,32 +89,6 @@ export default function ChatPanel({
       requestAnimationFrame(apply);
     });
   }, [chatScrollRef]);
-
-  useEffect(() => {
-    if (!keyboardAware || !isInputFocused) {
-      return undefined;
-    }
-
-    const scrollElement = chatScrollRef?.current;
-    if (!scrollElement) {
-      return undefined;
-    }
-
-    const pin = () => {
-      scrollElement.scrollTop = scrollElement.scrollHeight;
-    };
-
-    pin();
-    const resizeObserver = new ResizeObserver(pin);
-    resizeObserver.observe(scrollElement);
-
-    const contentElement = scrollElement.querySelector('.chat-scroll-area__content');
-    if (contentElement) {
-      resizeObserver.observe(contentElement);
-    }
-
-    return () => resizeObserver.disconnect();
-  }, [keyboardAware, isInputFocused, chatScrollRef, chatFeed]);
 
   useEffect(() => {
     if (isEmpty) {
@@ -169,12 +125,8 @@ export default function ChatPanel({
 
     pinChatToBottom('auto');
     const afterLayout = window.setTimeout(() => pinChatToBottom('auto'), 80);
-    const afterKeyboard = window.setTimeout(() => pinChatToBottom('auto'), 280);
 
-    return () => {
-      window.clearTimeout(afterLayout);
-      window.clearTimeout(afterKeyboard);
-    };
+    return () => window.clearTimeout(afterLayout);
   }, [chatFeed, isEmpty, pinChatToBottom]);
 
   useEffect(() => {
@@ -182,31 +134,23 @@ export default function ChatPanel({
       return undefined;
     }
 
-    pinChatToBottom('auto');
-    return undefined;
-  }, [keyboardAware, isEmpty, viewportInset.bottom, viewportInset.height, pinChatToBottom]);
-
-  useEffect(() => {
-    if (!keyboardAware) {
-      wasKeyboardOpenRef.current = false;
-      return;
-    }
-
-    const keyboardVisible = viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
     if (keyboardVisible && !wasKeyboardOpenRef.current) {
       pinChatToBottom('auto');
     }
 
     wasKeyboardOpenRef.current = keyboardVisible;
-  }, [keyboardAware, viewportInset.bottom, pinChatToBottom]);
+    return undefined;
+  }, [keyboardAware, isEmpty, keyboardVisible, pinChatToBottom]);
+
+  const dismissKeyboard = useCallback(() => {
+    inputRef.current?.blur();
+  }, []);
 
   const refocusInput = useCallback(() => {
     requestAnimationFrame(() => {
       inputRef.current?.focus({ preventScroll: true });
-      setIsInputFocused(true);
-      setKeyboardOpenClass(true);
     });
-  }, [setKeyboardOpenClass]);
+  }, []);
 
   const preventComposerBlur = useCallback((event) => {
     event.preventDefault();
@@ -241,19 +185,14 @@ export default function ChatPanel({
   }, [onSubmit, pinChatToBottom, refocusInput]);
 
   const handleInputFocus = () => {
-    setIsInputFocused(true);
-    setKeyboardOpenClass(true);
     pinChatToBottom('auto');
   };
 
-  const handleInputBlur = () => {
-    requestAnimationFrame(() => {
-      if (suppressBlurRef.current || document.activeElement === inputRef.current) {
-        return;
-      }
-
-      setIsInputFocused(false);
-    });
+  const handleScrollAreaPointerDown = (event) => {
+    if (event.target.closest('.chat-bubble-wrap, .chat-input-bar, .chat-reaction-picker')) {
+      return;
+    }
+    dismissKeyboard();
   };
 
   return (
@@ -262,7 +201,11 @@ export default function ChatPanel({
       role="tabpanel"
       aria-label="채팅"
     >
-      <div ref={chatScrollRef} className="chat-scroll-area scrollbar-soft">
+      <div
+        ref={chatScrollRef}
+        className="chat-scroll-area scrollbar-soft"
+        onPointerDown={handleScrollAreaPointerDown}
+      >
         <div className="chat-scroll-area__content">
           {isEmpty ? (
             <p className="chat-panel__empty">아직 채팅이 없어요. 첫 메시지를 남겨보세요.</p>
@@ -285,7 +228,9 @@ export default function ChatPanel({
               </section>
             ))
           )}
-          {!isEmpty && <div className="chat-scroll-area__bottom-spacer" aria-hidden="true" />}
+          {!isEmpty && !dedicatedLayout && (
+            <div className="chat-scroll-area__bottom-spacer" aria-hidden="true" />
+          )}
         </div>
       </div>
 
@@ -304,7 +249,6 @@ export default function ChatPanel({
             value={chatText}
             onChange={(e) => onChatTextChange(e.target.value)}
             onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
             placeholder="메시지를 입력하세요..."
             maxLength={300}
             aria-label="채팅 메시지"
