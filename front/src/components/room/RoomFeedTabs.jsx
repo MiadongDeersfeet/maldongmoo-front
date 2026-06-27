@@ -1,6 +1,11 @@
 import './RoomFeedTabs.css';
 
-export default function RoomFeedTabs({ activeTab, onChange, unreadChatCount = 0 }) {
+export default function RoomFeedTabs({
+  activeTab,
+  onChange,
+  unreadChatCount = 0,
+  unreadCertificationCount = 0,
+}) {
   return (
     <div className="room-feed-tabs" role="tablist" aria-label="방 피드 전환">
       <button
@@ -10,7 +15,10 @@ export default function RoomFeedTabs({ activeTab, onChange, unreadChatCount = 0 
         role="tab"
         aria-selected={activeTab === 'certifications'}
       >
-        암송 인증
+        <span>암송 인증</span>
+        {unreadCertificationCount > 0 && (
+          <span className="room-feed-tab-badge">{unreadCertificationCount}</span>
+        )}
       </button>
       <button
         type="button"

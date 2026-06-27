@@ -10,7 +10,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate',
+      injectRegister: 'inline',
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
       manifest: {
         name: '말씀암송 인증방',
         short_name: '말동무',

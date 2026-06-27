@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { Check, Minus, Plus, RotateCcw, X } from 'lucide-react';
+import {
+  playAnalogCounterBulkClick,
+  playAnalogCounterClick,
+} from '@/utils/counterClickSound.js';
 import './InlineCheckInPanel.css';
 import './InlineCounterRecorder.css';
 
@@ -9,15 +13,29 @@ export default function InlineCounterRecorder({ onCancel, onComplete, isSubmitti
   const [count, setCount] = useState(0);
 
   const handleDecrease = () => {
-    setCount((prev) => Math.max(0, prev - 1));
+    setCount((prev) => {
+      if (prev <= 0) {
+        return prev;
+      }
+      playAnalogCounterClick('down');
+      return prev - 1;
+    });
   };
 
   const handleIncrease = () => {
+    playAnalogCounterClick('up');
     setCount((prev) => prev + 1);
   };
 
   const handleStep = (delta) => {
-    setCount((prev) => Math.max(0, prev + delta));
+    setCount((prev) => {
+      const next = Math.max(0, prev + delta);
+      if (next === prev) {
+        return prev;
+      }
+      playAnalogCounterBulkClick(delta > 0 ? 'up' : 'down');
+      return next;
+    });
   };
 
   const handleReset = () => {

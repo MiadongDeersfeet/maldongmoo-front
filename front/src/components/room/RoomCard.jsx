@@ -4,7 +4,13 @@ import StatusBadge from '@/components/ui/StatusBadge.jsx';
 import RoomProfileStack from '@/components/room/RoomProfileStack.jsx';
 import './RoomCard.css';
 
-export default function RoomCard({ roomData }) {
+export default function RoomCard({
+  roomData,
+  hasNewActivity = false,
+  onEnter,
+  onInviteCopySuccess,
+  onInviteCopyError,
+}) {
   const navigate = useNavigate();
   const { room, memberCount = 0, isTodayCompleted, roomRole, participants = [] } = roomData;
   const isLeader = roomRole === 'LEADER';
@@ -12,6 +18,7 @@ export default function RoomCard({ roomData }) {
   const profileParticipants = participants.slice(0, 4);
 
   const handleEnter = () => {
+    onEnter?.(room.roomId);
     navigate(`/rooms/${room.roomId}`);
   };
 
@@ -21,8 +28,9 @@ export default function RoomCard({ roomData }) {
 
     try {
       await navigator.clipboard.writeText(room.inviteCode);
+      onInviteCopySuccess?.();
     } catch {
-      // clipboard unavailable
+      onInviteCopyError?.();
     }
   };
 
@@ -42,6 +50,11 @@ export default function RoomCard({ roomData }) {
           <StatusBadge variant={isTodayCompleted ? 'done' : 'pending'}>
             {isTodayCompleted ? '오늘 완료' : '인증 전'}
           </StatusBadge>
+          {hasNewActivity && (
+            <p className="room-card__activity-hint" role="status">
+              새로운 알림이 있어요.
+            </p>
+          )}
         </div>
       </div>
 

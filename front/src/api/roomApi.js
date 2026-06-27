@@ -46,6 +46,24 @@ export async function joinRoom(inviteCode) {
 
 /**
  * @param {number | string} roomId
+ * @param {number | string} memberId
+ */
+export async function kickRoomMember(roomId, memberId) {
+  const response = await apiClient.post(`/api/rooms/${roomId}/members/${memberId}/kick`);
+  return unwrapApiData(response);
+}
+
+/**
+ * @param {number | string} roomId
+ * @param {number | string} memberId
+ */
+export async function encourageRoomMember(roomId, memberId) {
+  const response = await apiClient.post(`/api/rooms/${roomId}/members/${memberId}/encourage`);
+  return unwrapApiData(response);
+}
+
+/**
+ * @param {number | string} roomId
  */
 export async function leaveRoom(roomId) {
   const response = await apiClient.post(`/api/rooms/${roomId}/leave`);

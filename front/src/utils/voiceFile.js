@@ -7,6 +7,9 @@ const ALLOWED_UPLOAD_MIME_TYPES = new Set([
   'audio/wave',
 ]);
 
+/** Matches backend `app.upload.max-voice-file-size` (25MB). */
+export const MAX_VOICE_UPLOAD_BYTES = 25 * 1024 * 1024;
+
 export function normalizeVoiceMimeType(mimeType) {
   const base = (mimeType || 'audio/webm').split(';')[0].trim().toLowerCase();
 

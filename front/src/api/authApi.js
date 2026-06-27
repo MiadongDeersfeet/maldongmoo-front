@@ -58,3 +58,13 @@ export async function getMe() {
 export async function logout() {
   await apiClient.post('/api/auth/logout');
 }
+
+/**
+ * Local-only test login (accountKey: "a" | "b").
+ * @param {'a' | 'b'} accountKey
+ * @returns {Promise<MeResponse>}
+ */
+export async function loginAsTestAccount(accountKey) {
+  const response = await apiClient.post(`/api/dev/test-login/${accountKey}`);
+  return unwrapApiData(response);
+}

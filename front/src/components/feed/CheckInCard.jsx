@@ -3,6 +3,7 @@ import { Play } from 'lucide-react';
 import AvatarCircle from '@/components/ui/AvatarCircle.jsx';
 import { getRoomRole } from '@/mocks/index.js';
 import { resolveAudioUrl } from '@/utils/audioUrl.js';
+import { formatDisplayTime } from '@/utils/date.js';
 import AmenButton from './AmenButton.jsx';
 import './CheckInCard.css';
 
@@ -23,11 +24,7 @@ function stopSharedAudio() {
 }
 
 function formatTime(createdAt) {
-  const hour = Number(createdAt.slice(11, 13));
-  const minute = createdAt.slice(14, 16);
-  const period = hour < 12 ? '오전' : '오후';
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${period} ${displayHour}:${minute}`;
+  return formatDisplayTime(createdAt);
 }
 
 function getRoleLabel(isOwnCard, roomRole) {

@@ -7,11 +7,13 @@ import { buildWebSocketUrl } from '@/utils/websocketUrl.js';
  * @param {{
  *   enabled?: boolean,
  *   onMessage?: (message: Record<string, unknown>) => void,
+ *   onReaction?: (payload: Record<string, unknown>) => void,
  * }} options
  */
-export function useRoomChatSocket(roomId, { enabled = false, onMessage } = {}) {
+export function useRoomChatSocket(roomId, { enabled = false, onMessage, onReaction } = {}) {
   const clientRef = useRef(null);
   const onMessageRef = useRef(onMessage);
+  const onReactionRef = useRef(onReaction);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
   const isActive = Boolean(enabled && roomId);
@@ -19,6 +21,10 @@ export function useRoomChatSocket(roomId, { enabled = false, onMessage } = {}) {
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
+
+  useEffect(() => {
+    onReactionRef.current = onReaction;
+  }, [onReaction]);
 
   useEffect(() => {
     if (!isActive) {
@@ -37,6 +43,14 @@ export function useRoomChatSocket(roomId, { enabled = false, onMessage } = {}) {
           try {
             const payload = JSON.parse(frame.body);
             onMessageRef.current?.(payload);
+          } catch {
+            // ignore malformed payloads
+          }
+        });
+        client.subscribe(`/topic/rooms/${roomId}/chat-reactions`, (frame) => {
+          try {
+            const payload = JSON.parse(frame.body);
+            onReactionRef.current?.(payload);
           } catch {
             // ignore malformed payloads
           }

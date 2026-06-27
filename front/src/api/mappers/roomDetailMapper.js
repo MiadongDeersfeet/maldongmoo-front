@@ -53,20 +53,49 @@ export function mapActiveSection(apiSections = []) {
 const DEFAULT_SECTION_TITLE = '암송 본문';
 const DEFAULT_SECTION_RANGE = '-';
 
-export function buildCreateSectionPayload(sectionContent) {
+/**
+ * @param {string | { sectionTitle?: string, sectionRange?: string, sectionContent: string }} payload
+ */
+export function buildCreateSectionPayload(payload) {
+  if (typeof payload === 'string') {
+    return {
+      sectionTitle: DEFAULT_SECTION_TITLE,
+      sectionRange: DEFAULT_SECTION_RANGE,
+      sectionContent: payload.trim(),
+    };
+  }
+
   return {
-    sectionTitle: DEFAULT_SECTION_TITLE,
-    sectionRange: DEFAULT_SECTION_RANGE,
-    sectionContent: sectionContent.trim(),
+    sectionTitle: payload.sectionTitle?.trim() || DEFAULT_SECTION_TITLE,
+    sectionRange: payload.sectionRange?.trim() || DEFAULT_SECTION_RANGE,
+    sectionContent: payload.sectionContent.trim(),
   };
 }
 
-export function buildUpdateSectionPayload(section, sectionContent) {
+/**
+ * @param {object | null | undefined} section
+ * @param {string | { sectionTitle?: string, sectionRange?: string, sectionContent: string }} payload
+ */
+export function buildUpdateSectionPayload(section, payload) {
+  if (typeof payload === 'string') {
+    return {
+      sectionTitle: section?.sectionTitle?.trim() || DEFAULT_SECTION_TITLE,
+      sectionRange:
+        section?.sectionRange?.trim() || section?.weeklyRange?.trim() || DEFAULT_SECTION_RANGE,
+      sectionContent: payload.trim(),
+      isActive: section?.isActive ?? 'Y',
+      displayOrder: section?.displayOrder,
+    };
+  }
+
   return {
-    sectionTitle: section?.sectionTitle?.trim() || DEFAULT_SECTION_TITLE,
+    sectionTitle: payload.sectionTitle?.trim() || section?.sectionTitle?.trim() || DEFAULT_SECTION_TITLE,
     sectionRange:
-      section?.sectionRange?.trim() || section?.weeklyRange?.trim() || DEFAULT_SECTION_RANGE,
-    sectionContent: sectionContent.trim(),
+      payload.sectionRange?.trim()
+      || section?.sectionRange?.trim()
+      || section?.weeklyRange?.trim()
+      || DEFAULT_SECTION_RANGE,
+    sectionContent: payload.sectionContent.trim(),
     isActive: section?.isActive ?? 'Y',
     displayOrder: section?.displayOrder,
   };
@@ -210,4 +239,31 @@ export function buildInitialTodayDashboard({ members = [], memberCount = 0 }) {
     completedMembers: [],
     pendingMembers,
   };
+}
+
+export function getLatestCheckInDetailId(feed = []) {
+  let latestDetailId = null;
+
+  const considerDetail = (detail) => {
+    const detailId = Number(detail?.checkInDetailId ?? detail?.detailId);
+    if (!Number.isFinite(detailId)) {
+      return;
+    }
+    if (latestDetailId === null || detailId > latestDetailId) {
+      latestDetailId = detailId;
+    }
+  };
+
+  feed.forEach((dayOrCard) => {
+    if (Array.isArray(dayOrCard?.checkIns)) {
+      dayOrCard.checkIns.forEach((card) => {
+        (card.details ?? []).forEach(considerDetail);
+      });
+      return;
+    }
+
+    (dayOrCard.details ?? []).forEach(considerDetail);
+  });
+
+  return latestDetailId;
 }

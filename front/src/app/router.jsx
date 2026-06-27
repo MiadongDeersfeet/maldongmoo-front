@@ -9,6 +9,20 @@ import JoinRoomPage from '@/pages/rooms/JoinRoomPage.jsx';
 import RoomDetailPage from '@/pages/rooms/RoomDetailPage.jsx';
 import VoiceCheckInPage from '@/pages/rooms/VoiceCheckInPage.jsx';
 import CounterCheckInPage from '@/pages/rooms/CounterCheckInPage.jsx';
+import RoomNotificationPreviewPage from '@/pages/dev/RoomNotificationPreviewPage.jsx';
+
+const devRoutes = import.meta.env.DEV
+  ? [
+      {
+        path: '/dev/room-notification-preview',
+        element: (
+          <AuthGuard>
+            <RoomNotificationPreviewPage />
+          </AuthGuard>
+        ),
+      },
+    ]
+  : [];
 
 export const router = createBrowserRouter([
   {
@@ -79,6 +93,7 @@ export const router = createBrowserRouter([
       </AuthGuard>
     ),
   },
+  ...devRoutes,
   {
     path: '*',
     element: <Navigate to="/" replace />,

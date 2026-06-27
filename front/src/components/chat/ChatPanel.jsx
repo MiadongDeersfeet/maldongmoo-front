@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Smile, Send } from 'lucide-react';
 import DateDivider from '@/components/feed/DateDivider.jsx';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
@@ -10,14 +11,26 @@ export default function ChatPanel({
   chatText,
   onChatTextChange,
   onSubmit,
+  onReactionSelect,
+  isReactionSubmitting = false,
   showInput = true,
   isInlineActive = false,
+  dedicatedLayout = false,
 }) {
+  const [reactionPickerMessageId, setReactionPickerMessageId] = useState(null);
   const isEmpty = chatFeed.length === 0;
+  const panelClassName = [
+    'chat-panel',
+    dedicatedLayout ? 'chat-panel--dedicated' : '',
+    isInlineActive ? 'chat-panel--inline-active' : '',
+    showInput ? '' : 'chat-panel--no-input',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div
-      className={`chat-panel ${isInlineActive ? 'chat-panel--inline-active' : ''}`}
+      className={panelClassName}
       role="tabpanel"
       aria-label="채팅"
     >
@@ -33,6 +46,11 @@ export default function ChatPanel({
                   key={message.messageId}
                   message={message}
                   isMine={message.memberId === currentMemberId}
+                  isPickerOpen={reactionPickerMessageId === message.messageId}
+                  onOpenPicker={() => setReactionPickerMessageId(message.messageId)}
+                  onClosePicker={() => setReactionPickerMessageId(null)}
+                  onReactionSelect={(reactionType) => onReactionSelect?.(message.messageId, reactionType)}
+                  isReactionSubmitting={isReactionSubmitting}
                 />
               ))}
             </section>

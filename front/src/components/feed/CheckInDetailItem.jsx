@@ -1,7 +1,8 @@
+import { formatDisplayClock } from '@/utils/date.js';
 import './CheckInDetailItem.css';
 
 function formatTime(createdAt) {
-  return createdAt.slice(11, 16);
+  return formatDisplayClock(createdAt);
 }
 
 export default function CheckInDetailItem({ detail }) {

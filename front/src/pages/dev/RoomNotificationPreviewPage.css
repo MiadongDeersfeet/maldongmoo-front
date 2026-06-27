@@ -1,0 +1,156 @@
+.room-notification-preview {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: linear-gradient(180deg, #1f2a24 0%, #2b3a32 100%);
+  color: #eef5f1;
+}
+
+.room-notification-preview__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.room-notification-preview__eyebrow {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #9fd4bc;
+  text-transform: uppercase;
+}
+
+.room-notification-preview h1 {
+  margin: 0;
+  font-size: 1.375rem;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.room-notification-preview__desc {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(238, 245, 241, 0.82);
+}
+
+.room-notification-preview__button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.room-notification-preview__button-group button {
+  height: 2.625rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.room-notification-preview__button-group button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.room-notification-preview__button-group button.is-active {
+  background: linear-gradient(180deg, #54a885 0%, #3f9678 100%);
+}
+
+.room-notification-preview__legend {
+  margin: 0;
+  padding-left: 1.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: rgba(238, 245, 241, 0.78);
+}
+
+.room-notification-preview__back-link {
+  margin-top: auto;
+  color: #b8e8d4;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.room-notification-preview__phone {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.room-notification-preview__phone .app-shell {
+  width: min(100%, 420px);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.room-notification-preview__toolbar-placeholder {
+  margin: 0.375rem var(--space-page-x) 0;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.72);
+  color: #52625b;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.room-notification-preview__cert-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0  var(--space-page-x) 1rem;
+}
+
+.room-notification-preview__cert-hint {
+  margin: 0 0 0.875rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.72);
+  color: #52625b;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.room-notification-preview__cert-card {
+  margin-bottom: 0.75rem;
+  padding: 0.875rem;
+  border-radius: 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(63, 124, 90, 0.08);
+  box-shadow: 0 5px 14px rgba(48, 65, 55, 0.05);
+}
+
+.room-notification-preview__cert-card p {
+  margin: 0.375rem 0 0.25rem;
+  color: #24332d;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.room-notification-preview__cert-card time {
+  font-size: 0.6875rem;
+  color: #8a9690;
+}
+
+.room-notification-preview__cert-badge {
+  display: inline-block;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: #edf7f2;
+  color: #3f9678;
+  font-size: 0.6875rem;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .room-notification-preview {
+    grid-template-columns: 1fr;
+  }
+}

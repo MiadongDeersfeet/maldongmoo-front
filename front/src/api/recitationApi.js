@@ -80,6 +80,26 @@ export async function getCheckInFeed(roomId, date) {
 }
 
 /**
+ * @param {number | string} roomId
+ * @returns {Promise<{ unreadCount: number }>}
+ */
+export async function getUnreadCheckInCount(roomId) {
+  const response = await apiClient.get(`/api/rooms/${roomId}/check-ins/unread-count`);
+  return unwrapApiData(response);
+}
+
+/**
+ * @param {number | string} roomId
+ * @param {number | string} lastReadCheckInDetailId
+ */
+export async function markCheckInAsRead(roomId, lastReadCheckInDetailId) {
+  const response = await apiClient.put(`/api/rooms/${roomId}/check-ins/read`, {
+    lastReadCheckInDetailId: Number(lastReadCheckInDetailId),
+  });
+  return unwrapApiData(response);
+}
+
+/**
  * @param {number | string} checkInId
  */
 export async function addAmen(checkInId) {

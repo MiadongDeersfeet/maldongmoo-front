@@ -61,18 +61,16 @@
 .inline-voice-recorder__bar {
   flex: 1;
   max-width: 0.3125rem;
-  height: 35%;
+  min-height: 18%;
+  align-self: center;
   border-radius: var(--radius-pill);
   background: var(--color-primary);
-  opacity: 0.75;
-  animation: voice-bar-pulse 0.9s ease-in-out infinite;
-  animation-delay: var(--bar-delay, 0s);
+  opacity: 0.88;
+  transition: height 0.07s linear;
 }
 
 .inline-voice-recorder__waveform--paused .inline-voice-recorder__bar {
-  animation-play-state: paused;
   opacity: 0.35;
-  height: 22%;
 }
 
 .inline-voice-recorder__pause-btn {
@@ -94,12 +92,12 @@
   background: var(--color-primary-light);
 }
 
-@keyframes voice-bar-pulse {
-  0%,
-  100% {
-    height: 28%;
-  }
-  50% {
-    height: 88%;
-  }
+.inline-voice-recorder__pause-btn--start {
+  background: #e05252;
+  color: #fff;
+  border-color: #e05252;
+}
+
+.inline-voice-recorder__pause-btn--start:active:not(:disabled) {
+  background: #c94545;
 }

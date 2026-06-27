@@ -1,6 +1,4 @@
 import { redirectToKakaoLogin } from '@/api/authApi.js';
-import LandingBrandIcon from '@/components/onboarding/LandingBrandIcon.jsx';
-import LandingLeafDeco from '@/components/onboarding/LandingLeafDeco.jsx';
 import './LandingPage.css';
 
 function KakaoIcon() {
@@ -21,29 +19,45 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
+      <div className="landing-page__ambient" aria-hidden="true">
+        <span className="landing-page__glow landing-page__glow--sage" />
+        <span className="landing-page__glow landing-page__glow--coral" />
+        <span className="landing-page__glow landing-page__glow--gold" />
+      </div>
+
       <div className="landing-page__shell">
-        <LandingLeafDeco />
-
-        <div className="landing-page__main">
-          <LandingBrandIcon />
-          <h1 className="landing-page__title">말동무</h1>
-          <p className="landing-page__caption">
-            오직 여호와의 토라를 즐거워하여
-            <br />
-            그의 토라를 밤낮으로 묵상하는도다
-          </p>
-
-          <div className="landing-page__actions">
-            <button type="button" className="landing-page__kakao-btn" onClick={handleKakaoStart}>
-              <KakaoIcon />
-              카카오로 시작하기
-            </button>
+        <div className="landing-page__hero">
+          <div className="landing-page__icon-wrap">
+            <img
+              className="landing-page__icon"
+              src="/icons/icon-192.png"
+              srcSet="/icons/icon-192.png 1x, /icons/icon-512.png 2x"
+              width={120}
+              height={120}
+              alt=""
+            />
           </div>
+
+          <h1 className="landing-page__title">말동무</h1>
+          <p className="landing-page__eyebrow">말씀과 동행하는 무리들</p>
+          <blockquote className="landing-page__scripture">
+            <p className="landing-page__scripture-text">
+              오직 여호와의 율법을 즐거워하여
+              <br />
+              그의 율법을 주야로 묵상하는도다
+            </p>
+          </blockquote>
         </div>
 
-        <p className="landing-page__legal">
-          로그인 시 서비스 이용약관 및 개인정보 처리방침에 동의한 것으로 간주합니다.
-        </p>
+        <div className="landing-page__footer">
+          <button type="button" className="landing-page__kakao-btn" onClick={handleKakaoStart}>
+            <KakaoIcon />
+            카카오로 시작하기
+          </button>
+          <p className="landing-page__legal">
+            로그인 시 서비스 이용약관 및 개인정보 처리방침에 동의한 것으로 간주합니다.
+          </p>
+        </div>
       </div>
     </div>
   );

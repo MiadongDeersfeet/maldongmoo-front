@@ -47,3 +47,10 @@
   font-weight: 900;
   line-height: 1.25rem;
 }
+
+.room-feed-tab.is-active .room-feed-tab-badge {
+  background: #ffffff;
+  color: #e04545;
+  box-shadow: 0 0 0 1px rgba(224, 69, 69, 0.25);
+}
+

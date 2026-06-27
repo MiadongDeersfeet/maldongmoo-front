@@ -9,29 +9,36 @@ import FeedList from '@/components/feed/FeedList.jsx';
 import ChatPanel from '@/components/chat/ChatPanel.jsx';
 import CheckInMethodMenu from '@/components/room/CheckInMethodMenu.jsx';
 import RoomFeedTabs from '@/components/room/RoomFeedTabs.jsx';
+import RoomMembersPanel from '@/components/room/RoomMembersPanel.jsx';
 import InlineVoiceRecorder from '@/components/room/InlineVoiceRecorder.jsx';
 import InlineCounterRecorder from '@/components/room/InlineCounterRecorder.jsx';
 import AlertModal from '@/components/ui/AlertModal.jsx';
+import ComingSoonModal from '@/components/ui/ComingSoonModal.jsx';
 import ConfirmModal from '@/components/ui/ConfirmModal.jsx';
+import FadeToast from '@/components/ui/FadeToast.jsx';
 import SectionEditorModal from '@/components/ui/SectionEditorModal.jsx';
 import { useAuth } from '@/hooks/useAuth.js';
-import { getRoomDetail, getRoomMembers, leaveRoom } from '@/api/roomApi.js';
-import { getSections, getTodayCheckIn, getCheckInFeed, createCounterCheckIn, createVoiceCheckIn, addAmen, cancelAmen, createSection, updateSection } from '@/api/recitationApi.js';
+import { getRoomDetail, getRoomMembers, leaveRoom, kickRoomMember, encourageRoomMember } from '@/api/roomApi.js';
+import { getSections, getTodayCheckIn, getCheckInFeed, createCounterCheckIn, createVoiceCheckIn, addAmen, cancelAmen, createSection, updateSection, getUnreadCheckInCount, markCheckInAsRead } from '@/api/recitationApi.js';
 import {
   buildCreateSectionPayload,
-  buildInitialTodayDashboard,
   buildTodayDashboardFromMembersAndFeed,
   buildUpdateSectionPayload,
+  getLatestCheckInDetailId,
   mapActiveSection,
   mapCheckInFeedToGroupedFeed,
   mapRoomDetail,
   mapRoomMembers,
-  mergeTodayCheckInToDashboard,
 } from '@/api/mappers/roomDetailMapper.js';
 import { ApiError } from '@/api/apiClient.js';
 import { getLocalDateString } from '@/utils/date.js';
-import { getRoomChats, sendRoomChat } from '@/api/chatApi.js';
-import { appendChatMessageToFeed, mapChatMessagesToFeed } from '@/api/mappers/chatMapper.js';
+import { getRoomChats, sendRoomChat, markChatAsRead, getUnreadChatCount, upsertChatReaction } from '@/api/chatApi.js';
+import {
+  appendChatMessageToFeed,
+  getLatestChatMessageId,
+  mapChatMessagesToFeed,
+  updateChatReactionOnFeed,
+} from '@/api/mappers/chatMapper.js';
 import { useRoomChatSocket } from '@/hooks/useRoomChatSocket.js';
 import { useRoomEventsSocket } from '@/hooks/useRoomEventsSocket.js';
 import './RoomDetailPage.css';
@@ -64,19 +71,32 @@ export default function RoomDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOldestHint, setShowOldestHint] = useState(false);
   const [activeTab, setActiveTab] = useState('certifications');
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [unreadCertificationCount, setUnreadCertificationCount] = useState(0);
   const [chatFeed, setChatFeed] = useState([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
   const [isChatSubmitting, setIsChatSubmitting] = useState(false);
+  const [isChatReactionSubmitting, setIsChatReactionSubmitting] = useState(false);
   const [chatText, setChatText] = useState('');
   const [showCertificationSuccess, setShowCertificationSuccess] = useState(false);
   const [amenSubmittingCheckInId, setAmenSubmittingCheckInId] = useState(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const [isSectionSubmitting, setIsSectionSubmitting] = useState(false);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const [membersPanelOpen, setMembersPanelOpen] = useState(false);
+  const [kickTarget, setKickTarget] = useState(null);
+  const [isKicking, setIsKicking] = useState(false);
+  const [isMemberActionSubmitting, setIsMemberActionSubmitting] = useState(false);
   const [sectionEditorOpen, setSectionEditorOpen] = useState(false);
   const [sectionEditorSessionKey, setSectionEditorSessionKey] = useState(0);
   const [alertModal, setAlertModal] = useState({ open: false, title: '안내', message: '' });
+  const [comingSoonModal, setComingSoonModal] = useState({
+    open: false,
+    featureName: '',
+    description: '',
+  });
+  const [inviteCopyToast, setInviteCopyToast] = useState(null);
   const alertOnCloseRef = useRef(null);
 
   const isLeader = room?.myRole === 'LEADER';
@@ -111,11 +131,13 @@ export default function RoomDetailPage() {
       setRoomError(null);
       setSection(null);
       setFeed([]);
+      setUnreadChatCount(0);
+      setUnreadCertificationCount(0);
 
       const todayDate = getLocalDateString();
       const sectionsPromise = getSections(numericRoomId).catch(() => null);
       const todayCheckInPromise = getTodayCheckIn(numericRoomId).catch(() => null);
-      const todayFeedPromise = getCheckInFeed(numericRoomId, todayDate).catch(() => null);
+      const todayFeedPromise = getCheckInFeed(numericRoomId, todayDate);
 
       try {
         const [apiRoom, apiMembers] = await Promise.all([
@@ -127,10 +149,6 @@ export default function RoomDetailPage() {
 
         const mappedRoom = mapRoomDetail(apiRoom);
         const mappedMembers = mapRoomMembers(apiMembers);
-        const baseDashboard = buildInitialTodayDashboard({
-          members: mappedMembers,
-          memberCount: mappedRoom.memberCount,
-        });
 
         setRoom(mappedRoom);
         setMembers(mappedMembers);
@@ -143,21 +161,15 @@ export default function RoomDetailPage() {
 
         if (!ignore) {
           setSection(mapActiveSection(apiSections ?? []));
-
-          if (apiTodayFeed !== null) {
-            setFeed(mapCheckInFeedToGroupedFeed(apiTodayFeed));
-            setTodayDashboard(
-              buildTodayDashboardFromMembersAndFeed({
-                members: mappedMembers,
-                memberCount: mappedRoom.memberCount,
-                todayFeed: apiTodayFeed,
-                todayCheckIn,
-              }),
-            );
-          } else {
-            setFeed([]);
-            setTodayDashboard(mergeTodayCheckInToDashboard(baseDashboard, todayCheckIn));
-          }
+          setFeed(mapCheckInFeedToGroupedFeed(apiTodayFeed ?? []));
+          setTodayDashboard(
+            buildTodayDashboardFromMembersAndFeed({
+              members: mappedMembers,
+              memberCount: mappedRoom.memberCount,
+              todayFeed: apiTodayFeed ?? [],
+              todayCheckIn,
+            }),
+          );
         }
       } catch (error) {
         if (ignore) return;
@@ -219,7 +231,11 @@ export default function RoomDetailPage() {
   const roomRefreshTimeoutRef = useRef(null);
   const sectionRefreshInFlightRef = useRef(false);
   const checkInRefreshInFlightRef = useRef(false);
+  const lastMarkedChatIdRef = useRef(null);
+  const lastMarkedCheckInDetailIdRef = useRef(null);
   const roomRefreshInFlightRef = useRef(false);
+  const activeTabRef = useRef(activeTab);
+  const currentMemberIdRef = useRef(member?.memberId ?? null);
 
   const scrollToBottom = useCallback((ref, behavior = 'auto') => {
     const el = ref.current;
@@ -281,32 +297,53 @@ export default function RoomDetailPage() {
   const refreshCheckInData = useCallback(async () => {
     const todayDate = getLocalDateString();
 
-    const [todayCheckIn, apiTodayFeed] = await Promise.all([
-      getTodayCheckIn(numericRoomId).catch(() => null),
-      getCheckInFeed(numericRoomId, todayDate).catch(() => null),
-    ]);
+    try {
+      const [todayCheckIn, apiTodayFeed] = await Promise.all([
+        getTodayCheckIn(numericRoomId).catch(() => null),
+        getCheckInFeed(numericRoomId, todayDate),
+      ]);
 
-    if (apiTodayFeed !== null) {
-      setFeed(mapCheckInFeedToGroupedFeed(apiTodayFeed));
+      setFeed(mapCheckInFeedToGroupedFeed(apiTodayFeed ?? []));
       setTodayDashboard(
         buildTodayDashboardFromMembersAndFeed({
           members,
           memberCount: room?.memberCount ?? 0,
-          todayFeed: apiTodayFeed,
+          todayFeed: apiTodayFeed ?? [],
           todayCheckIn,
         }),
       );
-    } else {
-      setFeed([]);
-      const baseDashboard = buildInitialTodayDashboard({
-        members,
-        memberCount: room?.memberCount ?? 0,
-      });
-      setTodayDashboard(mergeTodayCheckInToDashboard(baseDashboard, todayCheckIn));
+    } catch {
+      // Keep current feed on failure.
     }
 
     setFeedVersion((v) => v + 1);
   }, [numericRoomId, members, room?.memberCount]);
+
+  const refreshUnreadCounts = useCallback(async ({ skipChat = false, skipCert = false } = {}) => {
+    if (!Number.isFinite(numericRoomId) || numericRoomId <= 0) {
+      return;
+    }
+
+    try {
+      const [chatResult, certResult] = await Promise.all([
+        skipChat
+          ? Promise.resolve({ unreadCount: 0 })
+          : getUnreadChatCount(numericRoomId).catch(() => ({ unreadCount: 0 })),
+        skipCert
+          ? Promise.resolve({ unreadCount: 0 })
+          : getUnreadCheckInCount(numericRoomId).catch(() => ({ unreadCount: 0 })),
+      ]);
+
+      if (!skipChat) {
+        setUnreadChatCount(chatResult.unreadCount ?? 0);
+      }
+      if (!skipCert) {
+        setUnreadCertificationCount(certResult.unreadCount ?? 0);
+      }
+    } catch {
+      // Keep current badge counts on failure.
+    }
+  }, [numericRoomId]);
 
   const refreshChatData = useCallback(async () => {
     if (!Number.isFinite(numericRoomId) || numericRoomId <= 0) {
@@ -341,15 +378,93 @@ export default function RoomDetailPage() {
     return undefined;
   }, [room, activeTab, numericRoomId, refreshChatData]);
 
+  useEffect(() => {
+    lastMarkedChatIdRef.current = null;
+    lastMarkedCheckInDetailIdRef.current = null;
+  }, [numericRoomId]);
+
+  useEffect(() => {
+    if (!room || roomLoading) {
+      return undefined;
+    }
+
+    refreshUnreadCounts({
+      skipChat: activeTab === 'chat',
+      skipCert: activeTab === 'certifications',
+    });
+
+    return undefined;
+  }, [room, roomLoading, numericRoomId, activeTab, refreshUnreadCounts]);
+
+  useEffect(() => {
+    if (activeTab !== 'chat' || isChatLoading) {
+      return undefined;
+    }
+
+    const latestMessageId = getLatestChatMessageId(chatFeed);
+    if (!latestMessageId || lastMarkedChatIdRef.current === latestMessageId) {
+      return undefined;
+    }
+
+    lastMarkedChatIdRef.current = latestMessageId;
+    markChatAsRead(numericRoomId, latestMessageId).catch(() => {
+      lastMarkedChatIdRef.current = null;
+    });
+    setUnreadChatCount(0);
+
+    return undefined;
+  }, [activeTab, chatFeed, isChatLoading, numericRoomId]);
+
+  useEffect(() => {
+    if (activeTab !== 'certifications' || roomLoading) {
+      return undefined;
+    }
+
+    const latestDetailId = getLatestCheckInDetailId(feed);
+    if (!latestDetailId || lastMarkedCheckInDetailIdRef.current === latestDetailId) {
+      return undefined;
+    }
+
+    lastMarkedCheckInDetailIdRef.current = latestDetailId;
+    markCheckInAsRead(numericRoomId, latestDetailId)
+      .then(() => {
+        setUnreadCertificationCount(0);
+      })
+      .catch(() => {
+        lastMarkedCheckInDetailIdRef.current = null;
+      });
+
+    return undefined;
+  }, [activeTab, feed, roomLoading, numericRoomId]);
+
   const handleIncomingChatMessage = useCallback((message) => {
-    setChatFeed((prevFeed) => appendChatMessageToFeed(prevFeed, message));
+    const senderMemberId = Number(message?.memberId);
+    const isOwnMessage = senderMemberId === currentMemberIdRef.current;
+
+    if (activeTabRef.current === 'chat') {
+      setChatFeed((prevFeed) => appendChatMessageToFeed(prevFeed, message));
+      return;
+    }
+
+    if (!isOwnMessage && Number.isFinite(senderMemberId)) {
+      setUnreadChatCount((count) => count + 1);
+    }
   }, []);
 
-  const chatSocketEnabled = Boolean(room && activeTab === 'chat' && !isFullscreenRecitationOpen);
+  const handleIncomingChatReaction = useCallback((payload) => {
+    if (activeTabRef.current !== 'chat') {
+      return;
+    }
+
+    setChatFeed((prevFeed) => updateChatReactionOnFeed(prevFeed, payload));
+  }, []);
+
+  const chatSocketEnabled = Boolean(room && !isFullscreenRecitationOpen);
   const { isConnected: isChatSocketConnected, sendChatMessage: sendChatViaSocket } =
     useRoomChatSocket(numericRoomId, {
       enabled: chatSocketEnabled,
       onMessage: handleIncomingChatMessage,
+      onReaction: handleIncomingChatReaction,
     });
 
   const scheduleSectionRefresh = useCallback(() => {
@@ -409,9 +524,22 @@ export default function RoomDetailPage() {
           break;
         case 'CHECK_IN_CREATED':
         case 'CHECK_IN_UPDATED':
+          if (
+            activeTabRef.current !== 'certifications'
+            && Number(event.memberId) !== currentMemberIdRef.current
+          ) {
+            setUnreadCertificationCount((count) => count + 1);
+          }
+          scheduleCheckInRefresh();
+          break;
         case 'CHECK_IN_STATUS_UPDATED':
         case 'AMEN_UPDATED':
           scheduleCheckInRefresh();
+          break;
+        case 'CHAT_READ_UPDATED':
+          if (activeTabRef.current === 'chat') {
+            refreshChatData();
+          }
           break;
         case 'ROOM_MEMBER_LEFT':
           scheduleRoomRefresh();
@@ -425,16 +553,22 @@ export default function RoomDetailPage() {
           break;
       }
     },
-    [numericRoomId, scheduleSectionRefresh, scheduleCheckInRefresh, scheduleRoomRefresh, navigate, showAlert],
+    [numericRoomId, scheduleSectionRefresh, scheduleCheckInRefresh, scheduleRoomRefresh, navigate, showAlert, refreshChatData],
   );
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  useEffect(() => {
+    currentMemberIdRef.current = member?.memberId ?? null;
+  }, [member?.memberId]);
 
   const roomEventsSocketEnabled = Boolean(room && !isFullscreenRecitationOpen);
   useRoomEventsSocket(numericRoomId, {
     enabled: roomEventsSocketEnabled,
     onRoomEvent: handleRoomEvent,
   });
-
-  const unreadChatCount = 0;
 
   const clearCertificationFlowTimeouts = useCallback(() => {
     certificationFlowTimeoutsRef.current.forEach((timeoutId) => {
@@ -508,8 +642,13 @@ export default function RoomDetailPage() {
         closeInlinePanel();
         await refreshCheckInData();
         handleCertificationCompleted();
-      } catch {
+      } catch (error) {
         setIsSubmitting(false);
+        showAlert(
+          error instanceof ApiError
+            ? error.message
+            : '음성 인증 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+        );
       }
     },
     [
@@ -518,6 +657,7 @@ export default function RoomDetailPage() {
       closeInlinePanel,
       refreshCheckInData,
       handleCertificationCompleted,
+      showAlert,
     ],
   );
 
@@ -531,8 +671,13 @@ export default function RoomDetailPage() {
         closeInlinePanel();
         await refreshCheckInData();
         handleCertificationCompleted();
-      } catch {
+      } catch (error) {
         setIsSubmitting(false);
+        showAlert(
+          error instanceof ApiError
+            ? error.message
+            : '계수기 인증 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+        );
       }
     },
     [
@@ -541,6 +686,7 @@ export default function RoomDetailPage() {
       closeInlinePanel,
       refreshCheckInData,
       handleCertificationCompleted,
+      showAlert,
     ],
   );
 
@@ -737,7 +883,7 @@ export default function RoomDetailPage() {
   }, [isSectionSubmitting]);
 
   const handleSectionModalSubmit = useCallback(
-    async (sectionContent) => {
+    async (payload) => {
       if (isSectionSubmitting) {
         return;
       }
@@ -748,10 +894,10 @@ export default function RoomDetailPage() {
           await updateSection(
             numericRoomId,
             section.sectionId,
-            buildUpdateSectionPayload(section, sectionContent),
+            buildUpdateSectionPayload(section, payload),
           );
         } else {
-          await createSection(numericRoomId, buildCreateSectionPayload(sectionContent));
+          await createSection(numericRoomId, buildCreateSectionPayload(payload));
         }
 
         await refreshSectionData();
@@ -770,21 +916,123 @@ export default function RoomDetailPage() {
   );
 
   const handleSectionFooterClick = useCallback(() => {
+    setMembersPanelOpen(false);
     setIsRecitationExpanded((prev) => !prev);
+  }, []);
+
+  const handleOpenMembersPanel = useCallback(() => {
+    setCheckInMenuOpen(false);
+    setIsRecitationExpanded(false);
+    setMembersPanelOpen(true);
+  }, []);
+
+  const handleCloseMembersPanel = useCallback(() => {
+    setMembersPanelOpen(false);
+  }, []);
+
+  const handleEncourageMember = useCallback(
+    async (targetMember) => {
+      if (isMemberActionSubmitting || !targetMember?.memberId) {
+        return;
+      }
+
+      setIsMemberActionSubmitting(true);
+      try {
+        await encourageRoomMember(numericRoomId, targetMember.memberId);
+        showAlert(`${targetMember.name}님에게 격려 알림을 보냈어요.`);
+      } catch (error) {
+        showAlert(
+          error instanceof ApiError
+            ? error.message || '격려 알림 전송에 실패했습니다.'
+            : '격려 알림 전송에 실패했습니다.',
+        );
+      } finally {
+        setIsMemberActionSubmitting(false);
+      }
+    },
+    [isMemberActionSubmitting, numericRoomId, showAlert],
+  );
+
+  const handleKickMemberRequest = useCallback((targetMember) => {
+    if (!targetMember?.memberId) {
+      return;
+    }
+    setKickTarget(targetMember);
+  }, []);
+
+  const handleConfirmKickMember = useCallback(async () => {
+    if (isKicking || !kickTarget?.memberId) {
+      return;
+    }
+
+    setIsKicking(true);
+    try {
+      await kickRoomMember(numericRoomId, kickTarget.memberId);
+      await refreshRoomData();
+      await refreshCheckInData();
+      setKickTarget(null);
+      showAlert(`${kickTarget.name}님을 내보냈어요.`);
+    } catch (error) {
+      showAlert(
+        error instanceof ApiError
+          ? error.message || '멤버 내보내기에 실패했습니다.'
+          : '멤버 내보내기에 실패했습니다.',
+      );
+    } finally {
+      setIsKicking(false);
+    }
+  }, [isKicking, kickTarget, numericRoomId, refreshRoomData, refreshCheckInData, showAlert]);
+
+  const handleOpenStatsComingSoon = useCallback(() => {
+    setCheckInMenuOpen(false);
+    setComingSoonModal({
+      open: true,
+      featureName: '암송 기록',
+      description: '함께한 암송 기록과 통계를 한눈에 볼 수 있는 기능을 준비하고 있어요.',
+    });
+  }, []);
+
+  const handleCloseComingSoonModal = useCallback(() => {
+    setComingSoonModal((prev) => ({ ...prev, open: false }));
   }, []);
 
   const handleShareInvite = useCallback(async () => {
     if (!room?.inviteCode) return;
+
     try {
       await navigator.clipboard.writeText(room.inviteCode);
+      setInviteCopyToast({ id: Date.now() });
     } catch {
-      // clipboard unavailable
+      showAlert('초대코드를 복사하지 못했습니다.');
     }
-  }, [room]);
+  }, [room, showAlert]);
 
   const handleStartCheckIn = useCallback(() => {
     setCheckInMenuOpen(true);
   }, []);
+
+  const handleChatReaction = useCallback(
+    async (messageId, reactionType) => {
+      if (isChatReactionSubmitting || !Number.isFinite(numericRoomId) || numericRoomId <= 0) {
+        return;
+      }
+
+      setIsChatReactionSubmitting(true);
+      try {
+        const result = await upsertChatReaction(numericRoomId, messageId, reactionType);
+        setChatFeed((prevFeed) => updateChatReactionOnFeed(prevFeed, result));
+      } catch (error) {
+        showAlert(
+          error instanceof ApiError
+            ? error.message || '반응을 저장하지 못했습니다.'
+            : '반응을 저장하지 못했습니다.',
+        );
+      } finally {
+        setIsChatReactionSubmitting(false);
+      }
+    },
+    [isChatReactionSubmitting, numericRoomId, showAlert],
+  );
 
   const handleSendChatMessage = useCallback(
     async (event) => {
@@ -833,9 +1081,18 @@ export default function RoomDetailPage() {
   const sectionEditorInitialContent = section?.recitationText ?? section?.sectionContent ?? '';
   const sectionEditorMode = section?.sectionId ? 'edit' : 'create';
 
-  const showFooter = !inlineMode;
+  const showFooter = !inlineMode && activeTab !== 'chat' && !membersPanelOpen;
   const isInlineActive = Boolean(inlineMode);
   const showChatInput = activeTab === 'chat' && !inlineMode;
+
+  const handleFeedTabChange = useCallback((tab) => {
+    if (tab === 'chat') {
+      setCheckInMenuOpen(false);
+      setMembersPanelOpen(false);
+      setUnreadChatCount(0);
+    }
+    setActiveTab(tab);
+  }, []);
   const feedAreaClass = ['feed-area', 'scrollbar-soft', isInlineActive ? 'feed-area--panel-open' : '']
     .filter(Boolean)
     .join(' ');
@@ -939,8 +1196,9 @@ export default function RoomDetailPage() {
 
               <RoomFeedTabs
                 activeTab={activeTab}
-                onChange={setActiveTab}
+                onChange={handleFeedTabChange}
                 unreadChatCount={unreadChatCount}
+                unreadCertificationCount={unreadCertificationCount}
               />
 
               {activeTab === 'certifications' ? (
@@ -970,8 +1228,11 @@ export default function RoomDetailPage() {
                   chatText={chatText}
                   onChatTextChange={setChatText}
                   onSubmit={handleSendChatMessage}
+                  onReactionSelect={handleChatReaction}
+                  isReactionSubmitting={isChatReactionSubmitting}
                   showInput={showChatInput}
                   isInlineActive={isInlineActive}
+                  dedicatedLayout
                 />
               )}
             </div>
@@ -995,10 +1256,25 @@ export default function RoomDetailPage() {
             onSelectVoice={handleSelectVoice}
             onSelectCounter={handleSelectCounter}
             onSectionClick={handleSectionFooterClick}
+            onMembersClick={handleOpenMembersPanel}
+            onStatsClick={handleOpenStatsComingSoon}
             onShareClick={handleShareInvite}
             showShare={isLeader}
             hasCheckedInToday={todayDashboardSafe.myStatus === 'Y'}
             isSectionActive={isRecitationExpanded}
+            isMembersActive={membersPanelOpen}
+          />
+        )}
+
+        {membersPanelOpen && (
+          <RoomMembersPanel
+            members={members}
+            currentMemberId={member.memberId}
+            isLeader={isLeader}
+            onClose={handleCloseMembersPanel}
+            onEncourage={handleEncourageMember}
+            onKick={handleKickMemberRequest}
+            disabled={isMemberActionSubmitting || isKicking}
           />
         )}
 
@@ -1030,6 +1306,14 @@ export default function RoomDetailPage() {
           </div>
         )}
 
+        {inviteCopyToast && (
+          <FadeToast
+            key={inviteCopyToast.id}
+            message="초대코드가 복사되었습니다."
+            onDone={() => setInviteCopyToast(null)}
+          />
+        )}
+
         <ConfirmModal
           isOpen={leaveConfirmOpen}
           onClose={() => {
@@ -1047,6 +1331,23 @@ export default function RoomDetailPage() {
           confirmTone="danger"
         />
 
+        <ConfirmModal
+          isOpen={Boolean(kickTarget)}
+          onClose={() => {
+            if (!isKicking) {
+              setKickTarget(null);
+            }
+          }}
+          onConfirm={handleConfirmKickMember}
+          title="내보내기"
+          message={`${kickTarget?.name ?? '해당 멤버'}님을 방에서 내보내시겠습니까?`}
+          description="정말로 내보내시겠습니까?"
+          confirmLabel="내보내기"
+          cancelLabel="취소"
+          isConfirming={isKicking}
+          confirmTone="danger"
+        />
+
         <SectionEditorModal
           key={sectionEditorSessionKey}
           isOpen={sectionEditorOpen}
@@ -1054,6 +1355,8 @@ export default function RoomDetailPage() {
           onSubmit={handleSectionModalSubmit}
           mode={sectionEditorMode}
           initialContent={sectionEditorInitialContent}
+          initialTitle={section?.sectionTitle ?? ''}
+          initialRange={section?.sectionRange ?? section?.weeklyRange ?? ''}
           isSubmitting={isSectionSubmitting}
         />
 
@@ -1062,6 +1365,13 @@ export default function RoomDetailPage() {
           onClose={closeAlertModal}
           title={alertModal.title}
           message={alertModal.message}
+        />
+
+        <ComingSoonModal
+          isOpen={comingSoonModal.open}
+          onClose={handleCloseComingSoonModal}
+          featureName={comingSoonModal.featureName}
+          description={comingSoonModal.description}
         />
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AuthContext } from '@/hooks/useAuth.js';
+import { usePushSubscription } from '@/hooks/usePushSubscription.js';
 import { getMe, logout as logoutApi } from '@/api/authApi.js';
 import { ApiError } from '@/api/apiClient.js';
 
@@ -24,6 +25,8 @@ export function AuthProvider({ children }) {
   const [member, setMember] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+
+  usePushSubscription(Boolean(member));
 
   const refreshSession = useCallback(async () => {
     setAuthError(null);

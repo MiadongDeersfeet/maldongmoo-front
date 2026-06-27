@@ -14,7 +14,19 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.chat-panel--dedicated .chat-scroll-area {
+  padding-bottom: 5.5rem;
+}
+
+.chat-panel--dedicated.chat-panel--no-input .chat-scroll-area {
+  padding-bottom: 1rem;
+}
+
 .chat-panel--inline-active .chat-scroll-area {
+  padding-bottom: 14rem;
+}
+
+.chat-panel--dedicated.chat-panel--inline-active .chat-scroll-area {
   padding-bottom: 14rem;
 }
 
@@ -28,6 +40,10 @@
 
 .chat-panel__day:first-of-type .date-divider--capsule {
   margin-top: 0;
+}
+
+.chat-panel--dedicated .chat-input-bar {
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 .chat-input-bar {

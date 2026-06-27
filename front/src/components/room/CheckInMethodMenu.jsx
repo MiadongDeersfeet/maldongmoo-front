@@ -29,10 +29,13 @@ export default function CheckInMethodMenu({
   onSelectVoice,
   onSelectCounter,
   onSectionClick,
+  onMembersClick,
+  onStatsClick,
   onShareClick,
   showShare = false,
   hasCheckedInToday = false,
   isSectionActive = false,
+  isMembersActive = false,
 }) {
   const close = useCallback(() => {
     if (isOpen) onToggle();
@@ -66,6 +69,14 @@ export default function CheckInMethodMenu({
   const handleSideAction = (actionId) => {
     if (actionId === 'section' && onSectionClick) {
       onSectionClick();
+      return;
+    }
+    if (actionId === 'members' && onMembersClick) {
+      onMembersClick();
+      return;
+    }
+    if (actionId === 'stats' && onStatsClick) {
+      onStatsClick();
       return;
     }
     if (actionId === 'share' && onShareClick) {
@@ -115,7 +126,9 @@ export default function CheckInMethodMenu({
         <div className="footer-action-bar__side footer-action-bar__side--left">
           {SIDE_ACTIONS_LEFT.map((action) => {
             const Icon = action.icon;
-            const isActive = action.id === 'section' && isSectionActive;
+            const isActive =
+              (action.id === 'section' && isSectionActive)
+              || (action.id === 'members' && isMembersActive);
             return (
               <button
                 key={action.id}
