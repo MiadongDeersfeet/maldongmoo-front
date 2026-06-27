@@ -169,9 +169,22 @@ export default function ChatPanel({
 
     pinChatToBottom('auto');
     const afterLayout = window.setTimeout(() => pinChatToBottom('auto'), 80);
+    const afterKeyboard = window.setTimeout(() => pinChatToBottom('auto'), 280);
 
-    return () => window.clearTimeout(afterLayout);
+    return () => {
+      window.clearTimeout(afterLayout);
+      window.clearTimeout(afterKeyboard);
+    };
   }, [chatFeed, isEmpty, pinChatToBottom]);
+
+  useEffect(() => {
+    if (!keyboardAware || isEmpty) {
+      return undefined;
+    }
+
+    pinChatToBottom('auto');
+    return undefined;
+  }, [keyboardAware, isEmpty, viewportInset.bottom, viewportInset.height, pinChatToBottom]);
 
   useEffect(() => {
     if (!keyboardAware) {

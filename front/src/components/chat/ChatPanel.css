@@ -39,8 +39,9 @@ html.chat-keyboard-open .chat-scroll-area__content {
   min-height: auto;
 }
 
-html.chat-keyboard-open .chat-scroll-area__bottom-spacer {
-  height: calc(var(--chat-input-height) + 0.375rem);
+html.chat-keyboard-open .chat-panel--dedicated .chat-scroll-area__bottom-spacer {
+  display: none;
+  height: 0;
 }
 
 .chat-panel--dedicated.chat-panel--no-input .chat-scroll-area__bottom-spacer {
@@ -67,22 +68,30 @@ html.chat-keyboard-open .chat-scroll-area__bottom-spacer {
   margin-top: 0;
 }
 
+.chat-panel--dedicated {
+  overflow: hidden;
+}
+
+.chat-panel--dedicated .chat-scroll-area__bottom-spacer {
+  display: none;
+  height: 0;
+}
+
+.chat-panel--dedicated .chat-scroll-area {
+  padding-bottom: 0.375rem;
+}
+
 .chat-panel--dedicated .chat-input-bar {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(
-    calc(100vw - 2 * var(--space-page-x)),
-    calc(var(--app-max-width) - 2 * var(--space-page-x))
-  );
-  top: calc(
-    var(--visual-viewport-offset-top, 0px) + var(--visual-viewport-height, 100dvh)
-    - var(--chat-input-height) - var(--chat-input-bottom-gap)
-    - env(safe-area-inset-bottom, 0px)
-  );
+  position: relative;
+  flex-shrink: 0;
+  left: auto;
+  right: auto;
+  top: auto;
   bottom: auto;
-  z-index: 30;
-  will-change: top;
+  transform: none;
+  width: auto;
+  margin: 0 var(--space-page-x) calc(var(--chat-input-bottom-gap) + env(safe-area-inset-bottom, 0px));
+  z-index: 1;
 }
 
 .chat-input-bar {
@@ -157,4 +166,12 @@ html.chat-keyboard-open .chat-scroll-area__bottom-spacer {
 
 .chat-send-button:not(:disabled):active {
   background: #35886a;
+}
+
+/* Dedicated room chat: keep composer inside panel flex column (never viewport-fixed). */
+.chat-panel--dedicated > .chat-input-bar {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
 }

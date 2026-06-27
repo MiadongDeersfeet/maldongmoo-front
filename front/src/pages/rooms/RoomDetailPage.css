@@ -35,8 +35,21 @@ html.chat-keyboard-open body {
 }
 
 html.chat-keyboard-open .room-detail-shell {
+  position: fixed;
+  top: var(--visual-viewport-offset-top, 0px);
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--app-max-width);
   height: var(--visual-viewport-height, 100dvh);
   max-height: var(--visual-viewport-height, 100dvh);
+  z-index: 20;
+}
+
+html.chat-keyboard-open .app-page:has(.room-detail-shell) {
+  height: var(--visual-viewport-height, 100dvh);
+  overflow: hidden;
 }
 
 .room-detail-body {
