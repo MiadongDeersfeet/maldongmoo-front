@@ -59,22 +59,57 @@
   padding-left: 0.0625rem;
 }
 
-/* Kakao-style: time sits beside the bubble bottom, not above the row. */
+/* Time aligns with bubble row only; reactions sit on row 2. */
 .chat-message-bubble-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.3125rem;
+  display: grid;
+  column-gap: 0.3125rem;
+  row-gap: 0.1875rem;
   min-width: 0;
 }
 
 .chat-message-bubble-row.is-mine {
-  flex-direction: row;
-  justify-content: flex-end;
+  grid-template-columns: auto max-content;
+  grid-template-rows: auto auto;
+  justify-content: end;
+  justify-items: end;
+}
+
+.chat-message-bubble-row.is-mine .chat-message-meta {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+}
+
+.chat-message-bubble-row.is-mine .chat-bubble-inner {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.chat-message-bubble-row.is-mine .chat-reaction-summary {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .chat-message-bubble-row:not(.is-mine) {
-  flex-direction: row;
-  justify-content: flex-start;
+  grid-template-columns: max-content auto;
+  grid-template-rows: auto auto;
+  justify-content: start;
+}
+
+.chat-message-bubble-row:not(.is-mine) .chat-bubble-inner {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.chat-message-bubble-row:not(.is-mine) .chat-reaction-summary {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.chat-message-bubble-row:not(.is-mine) .chat-message-time {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
 }
 
 .chat-message-meta {
@@ -84,12 +119,6 @@
   justify-content: flex-end;
   gap: 0.125rem;
   flex-shrink: 0;
-  padding-bottom: 0.0625rem;
-}
-
-.chat-message-bubble-row:has(.chat-reaction-summary) .chat-message-meta,
-.chat-message-bubble-row:has(.chat-reaction-summary) .chat-message-time {
-  margin-bottom: 1.625rem;
 }
 
 .chat-message-time {
@@ -98,7 +127,6 @@
   white-space: nowrap;
   line-height: 1.1;
   flex-shrink: 0;
-  padding-bottom: 0.0625rem;
 }
 
 .chat-message-unread-count {
@@ -108,29 +136,14 @@
   line-height: 1;
 }
 
-.chat-bubble-wrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  width: fit-content;
-  max-width: 100%;
-  z-index: 1;
-}
-
-.chat-bubble-wrap.is-mine {
-  align-items: flex-end;
-}
-
-.chat-bubble-wrap.is-picker-open {
-  z-index: 30;
-}
-
 .chat-bubble-inner {
   position: relative;
   width: fit-content;
   max-width: 100%;
+}
+
+.chat-bubble-inner.is-picker-open {
+  z-index: 30;
 }
 
 .chat-bubble {
@@ -184,7 +197,7 @@
   animation: chat-reaction-picker-in 0.14s ease-out;
 }
 
-.chat-bubble-wrap.is-mine .chat-reaction-picker {
+.chat-message-bubble-row.is-mine .chat-reaction-picker {
   left: auto;
   right: 0;
   transform: none;

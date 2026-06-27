@@ -8,6 +8,7 @@ import './ChatPanel.css';
 const NEAR_BOTTOM_THRESHOLD_PX = 80;
 const KEYBOARD_OPEN_THRESHOLD_PX = 40;
 const MAX_IDLE_TOP_PADDING_PX = 120;
+const KEYBOARD_INSET_BUFFER_PX = 12;
 
 export default function ChatPanel({
   chatFeed,
@@ -42,7 +43,9 @@ export default function ChatPanel({
     .join(' ');
 
   const panelStyle = keyboardAware
-    ? { '--chat-keyboard-inset': `${viewportInset.bottom}px` }
+    ? {
+      '--chat-keyboard-inset': `${Math.max(0, viewportInset.bottom - KEYBOARD_INSET_BUFFER_PX)}px`,
+    }
     : undefined;
 
   const isNearBottom = useCallback(() => {
@@ -64,16 +67,17 @@ export default function ChatPanel({
       return;
     }
 
+    const atBottom = pinToBottom || stickToBottomRef.current || isNearBottom();
+
     contentElement.style.paddingTop = '0px';
     const contentHeight = contentElement.offsetHeight;
     const overflow = scrollElement.clientHeight - contentHeight;
 
-    if (!keyboardVisible && overflow > 0) {
+    if (!keyboardVisible && overflow > 0 && atBottom) {
       contentElement.style.paddingTop = `${Math.min(overflow, MAX_IDLE_TOP_PADDING_PX)}px`;
     }
 
-    const shouldPin = pinToBottom || stickToBottomRef.current || isNearBottom();
-    if (shouldPin) {
+    if (atBottom && (pinToBottom || stickToBottomRef.current || isNearBottom())) {
       scrollElement.scrollTop = scrollElement.scrollHeight;
       stickToBottomRef.current = true;
     }

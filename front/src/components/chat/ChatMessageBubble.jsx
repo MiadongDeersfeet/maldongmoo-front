@@ -118,13 +118,53 @@ export default function ChatMessageBubble({
     onClosePicker?.();
   };
 
-  const bubbleWrapClassName = [
-    'chat-bubble-wrap',
-    isMine ? 'is-mine' : '',
+  const bubbleInnerClassName = [
+    'chat-bubble-inner',
     isPickerOpen ? 'is-picker-open' : '',
   ]
     .filter(Boolean)
     .join(' ');
+
+  const bubbleInner = (
+    <div className={bubbleInnerClassName}>
+      <div
+        className="chat-bubble chat-bubble--interactive"
+        role="button"
+        tabIndex={0}
+        aria-expanded={isPickerOpen}
+        aria-label="메시지. 길게 눌러 반응을 선택하세요"
+        onPointerDown={handleBubblePointerDown}
+        onPointerMove={handleBubblePointerMove}
+        onPointerUp={handleBubblePointerUp}
+        onPointerCancel={handleBubblePointerUp}
+        onPointerLeave={handleBubblePointerUp}
+        onContextMenu={handleBubbleContextMenu}
+      >
+        {message.messageText}
+      </div>
+
+      {isPickerOpen && (
+        <div className="chat-reaction-picker" role="toolbar" aria-label="메시지 반응">
+          {CHAT_REACTION_OPTIONS.map(({ type, emoji, label }) => {
+            const isSelected = message.myReactionType === type;
+            return (
+              <button
+                key={type}
+                type="button"
+                className={`chat-reaction-picker__button${isSelected ? ' is-selected' : ''}`}
+                aria-label={label}
+                aria-pressed={isSelected}
+                disabled={isReactionSubmitting}
+                onClick={() => handleReactionClick(type)}
+              >
+                {emoji}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 
   const reactionSummary = hasReactions ? (
     <div className="chat-reaction-summary" aria-label="메시지 반응 요약">
@@ -147,63 +187,19 @@ export default function ChatMessageBubble({
     </div>
   ) : null;
 
-  const bubbleWrap = (
-    <div className={bubbleWrapClassName}>
-      <div className="chat-bubble-inner">
-        <div
-          className="chat-bubble chat-bubble--interactive"
-          role="button"
-          tabIndex={0}
-          aria-expanded={isPickerOpen}
-          aria-label="메시지. 길게 눌러 반응을 선택하세요"
-          onPointerDown={handleBubblePointerDown}
-          onPointerMove={handleBubblePointerMove}
-          onPointerUp={handleBubblePointerUp}
-          onPointerCancel={handleBubblePointerUp}
-          onPointerLeave={handleBubblePointerUp}
-          onContextMenu={handleBubbleContextMenu}
-        >
-          {message.messageText}
-        </div>
-
-        {isPickerOpen && (
-          <div className="chat-reaction-picker" role="toolbar" aria-label="메시지 반응">
-            {CHAT_REACTION_OPTIONS.map(({ type, emoji, label }) => {
-              const isSelected = message.myReactionType === type;
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  className={`chat-reaction-picker__button${isSelected ? ' is-selected' : ''}`}
-                  aria-label={label}
-                  aria-pressed={isSelected}
-                  disabled={isReactionSubmitting}
-                  onClick={() => handleReactionClick(type)}
-                >
-                  {emoji}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {reactionSummary}
-    </div>
-  );
-
   if (isMine) {
     return (
       <div ref={rowRef} className="chat-message-row is-mine">
         <div className="chat-message-content is-mine">
-          <div className="chat-message-bubble-row is-mine">
+          <div className={`chat-message-bubble-row is-mine${hasReactions ? ' has-reactions' : ''}`}>
             <div className="chat-message-meta">
               {showUnreadCount && (
                 <span className="chat-message-unread-count">{message.unreadCount}</span>
               )}
               <span className="chat-message-time">{timeLabel}</span>
             </div>
-            {bubbleWrap}
+            {bubbleInner}
+            {reactionSummary}
           </div>
         </div>
       </div>
@@ -220,8 +216,9 @@ export default function ChatMessageBubble({
           className="chat-avatar"
         />
         <span className="chat-message-name">{message.memberName}</span>
-        <div className="chat-message-bubble-row">
-          {bubbleWrap}
+        <div className={`chat-message-bubble-row${hasReactions ? ' has-reactions' : ''}`}>
+          {bubbleInner}
+          {reactionSummary}
           <span className="chat-message-time">{timeLabel}</span>
         </div>
       </div>
