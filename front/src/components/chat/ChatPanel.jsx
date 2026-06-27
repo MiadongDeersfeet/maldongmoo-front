@@ -107,6 +107,27 @@ export default function ChatPanel({
   }, [chatScrollRef]);
 
   useEffect(() => {
+    if (!keyboardAware || !isInputFocused) {
+      return undefined;
+    }
+
+    const scrollElement = chatScrollRef?.current;
+    if (!scrollElement) {
+      return undefined;
+    }
+
+    const pin = () => {
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+    };
+
+    pin();
+    const resizeObserver = new ResizeObserver(pin);
+    resizeObserver.observe(scrollElement);
+
+    return () => resizeObserver.disconnect();
+  }, [keyboardAware, isInputFocused, chatScrollRef]);
+
+  useEffect(() => {
     if (isEmpty) {
       return undefined;
     }
@@ -118,25 +139,6 @@ export default function ChatPanel({
   }, [chatFeed, isEmpty, pinChatToBottom]);
 
   useEffect(() => {
-    if (!keyboardAware || !isInputFocused) {
-      return undefined;
-    }
-
-    pinChatToBottom('auto');
-    const afterLayout = window.setTimeout(() => pinChatToBottom('auto'), 240);
-
-    return () => window.clearTimeout(afterLayout);
-  }, [
-    keyboardAware,
-    isInputFocused,
-    viewportInset.height,
-    viewportInset.bottom,
-    viewportInset.offsetTop,
-    chatFeed.length,
-    pinChatToBottom,
-  ]);
-
-  useEffect(() => {
     if (!keyboardAware) {
       wasKeyboardOpenRef.current = false;
       return;
@@ -145,7 +147,6 @@ export default function ChatPanel({
     const keyboardVisible = viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
     if (keyboardVisible && !wasKeyboardOpenRef.current) {
       pinChatToBottom('auto');
-      window.setTimeout(() => pinChatToBottom('auto'), 240);
     }
 
     wasKeyboardOpenRef.current = keyboardVisible;

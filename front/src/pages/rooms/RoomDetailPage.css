@@ -34,7 +34,7 @@ html.chat-keyboard-open body {
   overscroll-behavior: none;
 }
 
-html.chat-composer-active .room-detail-shell {
+html.chat-keyboard-open .room-detail-shell {
   height: var(--visual-viewport-height, 100dvh);
   max-height: var(--visual-viewport-height, 100dvh);
 }
@@ -55,23 +55,6 @@ html.chat-composer-active .room-detail-shell {
   background: rgba(248, 246, 239, 0.72);
   border-bottom: 1px solid var(--color-border-card);
   backdrop-filter: blur(6px);
-  max-height: 24rem;
-  overflow: hidden;
-  transition:
-    max-height 0.22s ease,
-    opacity 0.22s ease,
-    padding 0.22s ease,
-    border-color 0.22s ease;
-}
-
-html.chat-keyboard-open .room-detail-toolbar {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  border-bottom-color: transparent;
-  gap: 0;
-  pointer-events: none;
 }
 
 .room-mini-bar--expanded {
