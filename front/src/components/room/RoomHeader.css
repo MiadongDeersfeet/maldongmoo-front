@@ -9,6 +9,16 @@
   border-bottom: 1px solid var(--color-border-card);
   backdrop-filter: blur(10px);
   z-index: 25;
+  transition: min-height 0.22s ease, padding 0.22s ease;
+}
+
+html.chat-keyboard-open .room-header {
+  min-height: 2.75rem;
+  padding-bottom: 0.25rem;
+}
+
+html.chat-keyboard-open .room-header__subtitle {
+  display: none;
 }
 
 .room-header__back,

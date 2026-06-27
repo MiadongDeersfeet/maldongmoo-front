@@ -34,3 +34,7 @@
   color: var(--color-text-sub);
   box-shadow: 0 2px 8px rgba(31, 52, 48, 0.04);
 }
+
+html.chat-keyboard-open .chat-panel .date-divider--capsule {
+  margin: 0.75rem auto 0.625rem;
+}

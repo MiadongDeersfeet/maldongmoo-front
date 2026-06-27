@@ -1,7 +1,7 @@
 .chat-message-row {
   display: flex;
   gap: 0.5625rem;
-  margin-bottom: 0.875rem;
+  margin-bottom: 0.625rem;
 }
 
 .chat-message-row.is-mine {
@@ -103,7 +103,7 @@
 .chat-bubble {
   width: fit-content;
   max-width: 100%;
-  padding: 0.625rem 0.8125rem;
+  padding: 0.5rem 0.6875rem;
   border-radius: 1rem;
   background: #ffffff;
   border: 1px solid rgba(63, 124, 90, 0.08);

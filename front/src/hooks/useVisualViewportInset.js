@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 /**
  * Tracks soft-keyboard overlap using Visual Viewport API.
  * @param {boolean} enabled
- * @returns {{ bottom: number, height: number | null }}
+ * @returns {{ bottom: number, height: number | null, offsetTop: number }}
  */
 export function useVisualViewportInset(enabled = true) {
-  const [inset, setInset] = useState({ bottom: 0, height: null });
+  const [inset, setInset] = useState({ bottom: 0, height: null, offsetTop: 0 });
 
   useEffect(() => {
     if (!enabled || typeof window === 'undefined') {
@@ -27,6 +27,7 @@ export function useVisualViewportInset(enabled = true) {
       setInset({
         bottom,
         height: Math.round(viewport.height),
+        offsetTop: Math.round(viewport.offsetTop),
       });
     };
 

@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Smile, Send } from 'lucide-react';
 import DateDivider from '@/components/feed/DateDivider.jsx';
 import { useVisualViewportInset } from '@/hooks/useVisualViewportInset.js';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
 import './ChatPanel.css';
+
+const KEYBOARD_OPEN_THRESHOLD_PX = 40;
 
 export default function ChatPanel({
   chatFeed,
@@ -19,6 +21,8 @@ export default function ChatPanel({
   dedicatedLayout = false,
 }) {
   const [reactionPickerMessageId, setReactionPickerMessageId] = useState(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const didScrollOnFocusRef = useRef(false);
   const keyboardAware = Boolean(showInput && dedicatedLayout);
   const viewportInset = useVisualViewportInset(keyboardAware);
   const isEmpty = chatFeed.length === 0;
@@ -31,6 +35,10 @@ export default function ChatPanel({
     .filter(Boolean)
     .join(' ');
 
+  const setKeyboardOpenClass = useCallback((open) => {
+    document.documentElement.classList.toggle('chat-keyboard-open', open);
+  }, []);
+
   useEffect(() => {
     if (!keyboardAware) {
       return undefined;
@@ -40,7 +48,9 @@ export default function ChatPanel({
 
     return () => {
       document.documentElement.classList.remove('chat-composer-active');
+      document.documentElement.classList.remove('chat-keyboard-open');
       document.documentElement.style.removeProperty('--visual-viewport-height');
+      document.documentElement.style.removeProperty('--visual-viewport-offset-top');
       document.documentElement.style.removeProperty('--keyboard-inset');
     };
   }, [keyboardAware]);
@@ -55,10 +65,57 @@ export default function ChatPanel({
       `${viewportInset.height}px`,
     );
     document.documentElement.style.setProperty(
+      '--visual-viewport-offset-top',
+      `${viewportInset.offsetTop}px`,
+    );
+    document.documentElement.style.setProperty(
       '--keyboard-inset',
       `${viewportInset.bottom}px`,
     );
-  }, [keyboardAware, viewportInset.height, viewportInset.bottom]);
+  }, [keyboardAware, viewportInset.height, viewportInset.offsetTop, viewportInset.bottom]);
+
+  useEffect(() => {
+    if (!keyboardAware) {
+      return;
+    }
+
+    const keyboardVisible = viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
+    if (keyboardVisible || isInputFocused) {
+      setKeyboardOpenClass(true);
+      return;
+    }
+
+    setKeyboardOpenClass(false);
+  }, [keyboardAware, isInputFocused, viewportInset.bottom, setKeyboardOpenClass]);
+
+  const scrollChatToBottom = useCallback(() => {
+    const scrollElement = chatScrollRef?.current;
+    if (!scrollElement) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      scrollElement.scrollTo({
+        top: scrollElement.scrollHeight,
+        behavior: 'smooth',
+      });
+    });
+  }, [chatScrollRef]);
+
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+    setKeyboardOpenClass(true);
+
+    if (!didScrollOnFocusRef.current) {
+      didScrollOnFocusRef.current = true;
+      scrollChatToBottom();
+    }
+  };
+
+  const handleInputBlur = () => {
+    setIsInputFocused(false);
+    didScrollOnFocusRef.current = false;
+  };
 
   return (
     <div
@@ -93,11 +150,13 @@ export default function ChatPanel({
       {showInput && (
         <form className="chat-input-bar" onSubmit={onSubmit}>
           <button type="button" className="chat-emoji-button" aria-label="이모지">
-            <Smile size={20} strokeWidth={2} />
+            <Smile size={18} strokeWidth={2} />
           </button>
           <input
             value={chatText}
             onChange={(e) => onChatTextChange(e.target.value)}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
             placeholder="메시지를 입력하세요..."
             maxLength={300}
             aria-label="채팅 메시지"
@@ -109,7 +168,7 @@ export default function ChatPanel({
             disabled={!chatText.trim()}
             aria-label="메시지 보내기"
           >
-            <Send size={18} strokeWidth={2.25} />
+            <Send size={16} strokeWidth={2.25} />
           </button>
         </form>
       )}
