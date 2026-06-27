@@ -22,7 +22,7 @@ export default function ChatPanel({
 }) {
   const [reactionPickerMessageId, setReactionPickerMessageId] = useState(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const didScrollOnFocusRef = useRef(false);
+  const wasKeyboardOpenRef = useRef(false);
   const keyboardAware = Boolean(showInput && dedicatedLayout);
   const viewportInset = useVisualViewportInset(keyboardAware);
   const isEmpty = chatFeed.length === 0;
@@ -88,33 +88,66 @@ export default function ChatPanel({
     setKeyboardOpenClass(false);
   }, [keyboardAware, isInputFocused, viewportInset.bottom, setKeyboardOpenClass]);
 
-  const scrollChatToBottom = useCallback(() => {
+  const pinChatToBottom = useCallback((behavior = 'auto') => {
     const scrollElement = chatScrollRef?.current;
     if (!scrollElement) {
       return;
     }
 
-    requestAnimationFrame(() => {
+    const apply = () => {
       scrollElement.scrollTo({
         top: scrollElement.scrollHeight,
-        behavior: 'smooth',
+        behavior,
       });
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(apply);
     });
   }, [chatScrollRef]);
+
+  useEffect(() => {
+    if (!keyboardAware || !isInputFocused) {
+      return undefined;
+    }
+
+    pinChatToBottom('auto');
+    const afterLayout = window.setTimeout(() => pinChatToBottom('auto'), 240);
+
+    return () => window.clearTimeout(afterLayout);
+  }, [
+    keyboardAware,
+    isInputFocused,
+    viewportInset.height,
+    viewportInset.bottom,
+    viewportInset.offsetTop,
+    chatFeed.length,
+    pinChatToBottom,
+  ]);
+
+  useEffect(() => {
+    if (!keyboardAware) {
+      wasKeyboardOpenRef.current = false;
+      return;
+    }
+
+    const keyboardVisible = viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
+    if (keyboardVisible && !wasKeyboardOpenRef.current) {
+      pinChatToBottom('auto');
+      window.setTimeout(() => pinChatToBottom('auto'), 240);
+    }
+
+    wasKeyboardOpenRef.current = keyboardVisible;
+  }, [keyboardAware, viewportInset.bottom, pinChatToBottom]);
 
   const handleInputFocus = () => {
     setIsInputFocused(true);
     setKeyboardOpenClass(true);
-
-    if (!didScrollOnFocusRef.current) {
-      didScrollOnFocusRef.current = true;
-      scrollChatToBottom();
-    }
+    pinChatToBottom('auto');
   };
 
   const handleInputBlur = () => {
     setIsInputFocused(false);
-    didScrollOnFocusRef.current = false;
   };
 
   return (
@@ -124,27 +157,29 @@ export default function ChatPanel({
       aria-label="채팅"
     >
       <div ref={chatScrollRef} className="chat-scroll-area scrollbar-soft">
-        {isEmpty ? (
-          <p className="chat-panel__empty">아직 채팅이 없어요. 첫 메시지를 남겨보세요.</p>
-        ) : (
-          chatFeed.map((day) => (
-            <section key={day.checkInDate} className="chat-panel__day">
-              <DateDivider checkInDate={day.checkInDate} variant="capsule" />
-              {day.messages.map((message) => (
-                <ChatMessageBubble
-                  key={message.messageId}
-                  message={message}
-                  isMine={message.memberId === currentMemberId}
-                  isPickerOpen={reactionPickerMessageId === message.messageId}
-                  onOpenPicker={() => setReactionPickerMessageId(message.messageId)}
-                  onClosePicker={() => setReactionPickerMessageId(null)}
-                  onReactionSelect={(reactionType) => onReactionSelect?.(message.messageId, reactionType)}
-                  isReactionSubmitting={isReactionSubmitting}
-                />
-              ))}
-            </section>
-          ))
-        )}
+        <div className="chat-scroll-area__content">
+          {isEmpty ? (
+            <p className="chat-panel__empty">아직 채팅이 없어요. 첫 메시지를 남겨보세요.</p>
+          ) : (
+            chatFeed.map((day) => (
+              <section key={day.checkInDate} className="chat-panel__day">
+                <DateDivider checkInDate={day.checkInDate} variant="capsule" />
+                {day.messages.map((message) => (
+                  <ChatMessageBubble
+                    key={message.messageId}
+                    message={message}
+                    isMine={message.memberId === currentMemberId}
+                    isPickerOpen={reactionPickerMessageId === message.messageId}
+                    onOpenPicker={() => setReactionPickerMessageId(message.messageId)}
+                    onClosePicker={() => setReactionPickerMessageId(null)}
+                    onReactionSelect={(reactionType) => onReactionSelect?.(message.messageId, reactionType)}
+                    isReactionSubmitting={isReactionSubmitting}
+                  />
+                ))}
+              </section>
+            ))
+          )}
+        </div>
       </div>
 
       {showInput && (

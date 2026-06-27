@@ -14,10 +14,22 @@
   overflow-y: auto;
   padding: 0.25rem var(--space-page-x) 8.375rem;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-scroll-area__content {
+  margin-top: auto;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .chat-panel--dedicated .chat-scroll-area {
-  padding-bottom: 4rem;
+  padding-bottom: calc(var(--chat-input-height) + var(--chat-input-bottom-gap) + 0.5rem);
+}
+
+html.chat-keyboard-open .chat-panel--dedicated .chat-scroll-area {
+  padding-bottom: calc(var(--chat-input-height) + var(--chat-input-bottom-gap) + 0.25rem);
 }
 
 .chat-panel--dedicated.chat-panel--no-input .chat-scroll-area {
@@ -30,10 +42,6 @@
 
 .chat-panel--dedicated.chat-panel--inline-active .chat-scroll-area {
   padding-bottom: 14rem;
-}
-
-html.chat-keyboard-open .chat-panel--dedicated .chat-scroll-area {
-  padding-bottom: 3.25rem;
 }
 
 .chat-panel__empty {
