@@ -6,6 +6,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-page-x);
+  overflow-x: hidden;
   pointer-events: none;
 }
 
@@ -26,6 +27,7 @@
   max-height: min(88dvh, 640px);
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
   background: var(--color-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-floating);
@@ -47,11 +49,14 @@
 
 .app-modal__body {
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 0.5rem 1.25rem 1rem;
   color: var(--color-text-sub);
   font-size: 0.9375rem;
   line-height: 1.6;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app-modal__footer {

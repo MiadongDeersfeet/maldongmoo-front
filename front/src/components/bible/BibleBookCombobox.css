@@ -12,6 +12,8 @@
 
 .bible-book-combobox__input {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 2.625rem;
   padding: 0.625rem 0.875rem;
   border: 1px solid var(--color-line);
@@ -24,7 +26,7 @@
 .bible-book-combobox__input:focus {
   outline: none;
   border-color: rgba(63, 143, 122, 0.45);
-  box-shadow: 0 0 0 3px rgba(207, 237, 227, 0.65);
+  box-shadow: inset 0 0 0 2px rgba(207, 237, 227, 0.85);
 }
 
 .bible-book-combobox__list {

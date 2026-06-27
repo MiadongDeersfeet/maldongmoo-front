@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useModalScrollLock } from '@/hooks/useModalScrollLock.js';
+import { resetHorizontalViewportScroll } from '@/utils/viewportScrollReset.js';
 import './AppModal.css';
 
 export default function AppModal({
@@ -10,6 +12,10 @@ export default function AppModal({
   footer,
   ariaLabel,
 }) {
+  const bodyRef = useRef(null);
+
+  useModalScrollLock(isOpen);
+
   useEffect(() => {
     if (!isOpen) {
       return undefined;
@@ -24,6 +30,12 @@ export default function AppModal({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  const handleBodyFocusOut = useCallback((event) => {
+    if (!bodyRef.current?.contains(event.relatedTarget)) {
+      resetHorizontalViewportScroll();
+    }
+  }, []);
 
   if (!isOpen) {
     return null;
@@ -48,7 +60,15 @@ export default function AppModal({
             <h2 className="app-modal__title">{title}</h2>
           </div>
         ) : null}
-        {children ? <div className="app-modal__body">{children}</div> : null}
+        {children ? (
+          <div
+            ref={bodyRef}
+            className="app-modal__body"
+            onFocusOut={handleBodyFocusOut}
+          >
+            {children}
+          </div>
+        ) : null}
         {footer ? <div className="app-modal__footer">{footer}</div> : null}
       </div>
     </div>,
