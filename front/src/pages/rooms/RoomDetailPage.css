@@ -24,6 +24,17 @@
     linear-gradient(180deg, #f8f6ef 0%, #eef5f1 100%);
 }
 
+html.chat-composer-active,
+html.chat-composer-active body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html.chat-composer-active .room-detail-shell {
+  height: var(--visual-viewport-height, 100dvh);
+  max-height: var(--visual-viewport-height, 100dvh);
+}
+
 .room-detail-body {
   flex: 1;
   display: flex;

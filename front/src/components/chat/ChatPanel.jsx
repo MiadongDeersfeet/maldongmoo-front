@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Smile, Send } from 'lucide-react';
 import DateDivider from '@/components/feed/DateDivider.jsx';
+import { useVisualViewportInset } from '@/hooks/useVisualViewportInset.js';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
 import './ChatPanel.css';
 
@@ -18,6 +19,8 @@ export default function ChatPanel({
   dedicatedLayout = false,
 }) {
   const [reactionPickerMessageId, setReactionPickerMessageId] = useState(null);
+  const keyboardAware = Boolean(showInput && dedicatedLayout);
+  const viewportInset = useVisualViewportInset(keyboardAware);
   const isEmpty = chatFeed.length === 0;
   const panelClassName = [
     'chat-panel',
@@ -27,6 +30,35 @@ export default function ChatPanel({
   ]
     .filter(Boolean)
     .join(' ');
+
+  useEffect(() => {
+    if (!keyboardAware) {
+      return undefined;
+    }
+
+    document.documentElement.classList.add('chat-composer-active');
+
+    return () => {
+      document.documentElement.classList.remove('chat-composer-active');
+      document.documentElement.style.removeProperty('--visual-viewport-height');
+      document.documentElement.style.removeProperty('--keyboard-inset');
+    };
+  }, [keyboardAware]);
+
+  useEffect(() => {
+    if (!keyboardAware || viewportInset.height == null) {
+      return;
+    }
+
+    document.documentElement.style.setProperty(
+      '--visual-viewport-height',
+      `${viewportInset.height}px`,
+    );
+    document.documentElement.style.setProperty(
+      '--keyboard-inset',
+      `${viewportInset.bottom}px`,
+    );
+  }, [keyboardAware, viewportInset.height, viewportInset.bottom]);
 
   return (
     <div
@@ -69,6 +101,7 @@ export default function ChatPanel({
             placeholder="메시지를 입력하세요..."
             maxLength={300}
             aria-label="채팅 메시지"
+            enterKeyHint="send"
           />
           <button
             type="submit"
