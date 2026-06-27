@@ -20,7 +20,6 @@ html.modal-open body {
   touch-action: pan-y;
   width: 100%;
   max-width: 100%;
-  transform: translate3d(var(--vv-offset-left, 0px), 0, 0);
 }
 
 body {

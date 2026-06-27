@@ -3,7 +3,7 @@ import AppModal from '@/components/ui/AppModal.jsx';
 import BibleBookCombobox from '@/components/bible/BibleBookCombobox.jsx';
 import { validateSectionContent } from '@/utils/sectionForm.js';
 import { buildSectionFromPassage, extractPassage, loadBibleData } from '@/utils/bibleText.js';
-import { syncVisualViewportHorizontalAlign } from '@/utils/viewportScrollReset.js';
+import { resetHorizontalViewportScroll } from '@/utils/viewportScrollReset.js';
 import './SectionEditorModal.css';
 
 /**
@@ -54,8 +54,7 @@ export default function SectionEditorModal({
   const submitLabel = mode === 'edit' ? '저장' : '등록';
 
   const handleFieldFocus = () => {
-    syncVisualViewportHorizontalAlign();
-    window.requestAnimationFrame(syncVisualViewportHorizontalAlign);
+    resetHorizontalViewportScroll();
   };
 
   const handleDigitChange = (setter) => (event) => {

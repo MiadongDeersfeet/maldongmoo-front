@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Play } from 'lucide-react';
+import { Pause, Play } from 'lucide-react';
 import AvatarCircle from '@/components/ui/AvatarCircle.jsx';
 import { getRoomRole } from '@/mocks/index.js';
 import { resolveAudioUrl } from '@/utils/audioUrl.js';
@@ -94,7 +94,22 @@ function VoicePlayButton({ audioUrl }) {
     };
   }, []);
 
-  const handlePlay = useCallback(() => {
+  const handleToggle = useCallback(() => {
+    if (isPlaying && audioRef.current) {
+      const playingAudio = audioRef.current;
+      playingAudio.pause();
+      playingAudio.currentTime = 0;
+
+      if (activeAudio === playingAudio) {
+        activeAudio = null;
+        activeResetPlayingState = null;
+      }
+
+      audioRef.current = null;
+      setIsPlaying(false);
+      return;
+    }
+
     const resolvedUrl = resolveAudioUrl(audioUrl);
     if (!resolvedUrl) {
       return;
@@ -142,16 +157,20 @@ function VoicePlayButton({ audioUrl }) {
 
     setIsPlaying(true);
     audio.play().catch(handleError);
-  }, [audioUrl]);
+  }, [audioUrl, isPlaying]);
 
   return (
     <button
       type="button"
       className={`feed-card__play-btn ${isPlaying ? 'feed-card__play-btn--playing' : ''}`}
-      onClick={handlePlay}
-      aria-label="녹음 재생"
+      onClick={handleToggle}
+      aria-label={isPlaying ? '녹음 정지' : '녹음 재생'}
     >
-      <Play size={11} strokeWidth={2.5} fill="currentColor" aria-hidden="true" />
+      {isPlaying ? (
+        <Pause size={11} strokeWidth={2.5} fill="currentColor" aria-hidden="true" />
+      ) : (
+        <Play size={11} strokeWidth={2.5} fill="currentColor" aria-hidden="true" />
+      )}
     </button>
   );
 }
