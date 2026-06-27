@@ -30,16 +30,18 @@
   scroll-padding-top: 0.625rem;
 }
 
-.chat-panel--keyboard-visible:not(.chat-panel--sparse) .chat-scroll-area__content {
+.chat-panel--keyboard-visible:not(.chat-panel--sparse):not(.chat-panel--empty) .chat-scroll-area__content {
   padding-top: 0.375rem;
   padding-bottom: calc(var(--chat-input-height) + 0.5rem);
 }
 
-.chat-panel--sparse.chat-panel--keyboard-visible .chat-input-bar {
+.chat-panel--sparse.chat-panel--keyboard-visible .chat-input-bar,
+.chat-panel--empty.chat-panel--keyboard-visible .chat-input-bar {
   margin-bottom: 0;
 }
 
-.chat-panel--sparse.chat-panel--keyboard-visible .chat-scroll-area__content {
+.chat-panel--sparse.chat-panel--keyboard-visible .chat-scroll-area__content,
+.chat-panel--empty.chat-panel--keyboard-visible .chat-scroll-area__content {
   padding-bottom: 0.125rem;
 }
 
