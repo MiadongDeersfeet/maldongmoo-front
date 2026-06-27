@@ -47,30 +47,53 @@
 }
 
 .inline-voice-recorder__waveform {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.1875rem;
   height: 3rem;
-  padding: 0 0.25rem;
+  padding: 0 0.375rem;
   border-radius: var(--radius-md);
   background: var(--color-accent-bluegreen);
+  overflow: hidden;
+}
+
+.inline-voice-recorder__waveform--live::after {
+  content: '';
+  position: absolute;
+  top: 0.375rem;
+  right: 0.3125rem;
+  bottom: 0.375rem;
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(36, 107, 90, 0.42);
+  pointer-events: none;
 }
 
 .inline-voice-recorder__bar {
   flex: 1;
   max-width: 0.3125rem;
-  min-height: 18%;
+  min-height: 14%;
   align-self: center;
   border-radius: var(--radius-pill);
   background: var(--color-primary);
   opacity: 0.88;
-  transition: height 0.07s linear;
+}
+
+.inline-voice-recorder__waveform--live .inline-voice-recorder__bar {
+  transition: none;
+}
+
+.inline-voice-recorder__waveform--live .inline-voice-recorder__bar:last-child {
+  opacity: 1;
+  background: #35886a;
 }
 
 .inline-voice-recorder__waveform--paused .inline-voice-recorder__bar {
   opacity: 0.35;
+  transition: height 0.12s ease, opacity 0.12s ease;
 }
 
 .inline-voice-recorder__pause-btn {

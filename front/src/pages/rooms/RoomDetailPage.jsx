@@ -41,7 +41,7 @@ import {
 } from '@/api/mappers/chatMapper.js';
 import { useRoomChatSocket } from '@/hooks/useRoomChatSocket.js';
 import { useRoomEventsSocket } from '@/hooks/useRoomEventsSocket.js';
-import './RoomDetailPage.css';
+import { scheduleHorizontalViewportScrollReset } from '@/utils/viewportScrollReset.js';
 
 const FEED_TOP_REVEAL_THRESHOLD = 12;
 const CERT_TOAST_SHOW_DELAY_MS = 100;
@@ -880,6 +880,7 @@ export default function RoomDetailPage() {
     }
 
     setSectionEditorOpen(false);
+    scheduleHorizontalViewportScrollReset();
   }, [isSectionSubmitting]);
 
   const handleSectionModalSubmit = useCallback(

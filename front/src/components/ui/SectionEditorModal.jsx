@@ -3,6 +3,7 @@ import AppModal from '@/components/ui/AppModal.jsx';
 import BibleBookCombobox from '@/components/bible/BibleBookCombobox.jsx';
 import { validateSectionContent } from '@/utils/sectionForm.js';
 import { buildSectionFromPassage, extractPassage, loadBibleData } from '@/utils/bibleText.js';
+import { syncVisualViewportHorizontalAlign } from '@/utils/viewportScrollReset.js';
 import './SectionEditorModal.css';
 
 /**
@@ -51,6 +52,15 @@ export default function SectionEditorModal({
 
   const title = mode === 'edit' ? '암송 본문 수정' : '암송 본문 등록';
   const submitLabel = mode === 'edit' ? '저장' : '등록';
+
+  const handleFieldFocus = () => {
+    syncVisualViewportHorizontalAlign();
+    window.requestAnimationFrame(syncVisualViewportHorizontalAlign);
+  };
+
+  const handleDigitChange = (setter) => (event) => {
+    setter(event.target.value.replace(/\D/g, ''));
+  };
 
   const handleApplyPassage = async () => {
     setError(null);
@@ -160,6 +170,7 @@ export default function SectionEditorModal({
             <BibleBookCombobox
               selectedBook={selectedBook}
               onSelectBook={setSelectedBook}
+              onFieldFocus={handleFieldFocus}
               disabled={isSubmitting || isBibleLoading}
             />
 
@@ -167,33 +178,39 @@ export default function SectionEditorModal({
               <label className="section-editor-modal__field">
                 <span>장</span>
                 <input
-                  type="number"
-                  min="1"
+                  type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
                   value={chapter}
-                  onChange={(event) => setChapter(event.target.value)}
+                  onChange={handleDigitChange(setChapter)}
+                  onFocus={handleFieldFocus}
                   disabled={isSubmitting || isBibleLoading}
                 />
               </label>
               <label className="section-editor-modal__field">
                 <span>시작 절</span>
                 <input
-                  type="number"
-                  min="1"
+                  type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
                   value={startVerse}
-                  onChange={(event) => setStartVerse(event.target.value)}
+                  onChange={handleDigitChange(setStartVerse)}
+                  onFocus={handleFieldFocus}
                   disabled={isSubmitting || isBibleLoading}
                 />
               </label>
               <label className="section-editor-modal__field">
                 <span>끝 절</span>
                 <input
-                  type="number"
-                  min="1"
+                  type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
                   value={endVerse}
-                  onChange={(event) => setEndVerse(event.target.value)}
+                  onChange={handleDigitChange(setEndVerse)}
+                  onFocus={handleFieldFocus}
                   placeholder="선택"
                   disabled={isSubmitting || isBibleLoading}
                 />
@@ -220,6 +237,7 @@ export default function SectionEditorModal({
               className="section-editor-modal__textarea"
               value={content}
               onChange={(event) => setContent(event.target.value)}
+              onFocus={handleFieldFocus}
               placeholder="권·장·절을 선택한 뒤 「본문 불러오기」를 눌러 주세요."
               disabled={isSubmitting || isBibleLoading}
               rows={8}
@@ -236,6 +254,7 @@ export default function SectionEditorModal({
                 setSectionRange('');
               }
             }}
+            onFocus={handleFieldFocus}
             placeholder="이번 주 암송할 본문을 입력해 주세요."
             disabled={isSubmitting}
             rows={8}

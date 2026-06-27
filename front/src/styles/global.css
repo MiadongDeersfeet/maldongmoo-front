@@ -9,9 +9,18 @@ html {
   overflow-x: hidden;
 }
 
-html.modal-open,
+html.modal-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 html.modal-open body {
-  overflow-x: hidden;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: pan-y;
+  width: 100%;
+  max-width: 100%;
+  transform: translate3d(var(--vv-offset-left, 0px), 0, 0);
 }
 
 body {
@@ -19,6 +28,7 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   line-height: 1.5;
@@ -30,6 +40,8 @@ body {
 #root {
   min-height: 100vh;
   min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body:has(.landing-page),

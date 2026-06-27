@@ -7,7 +7,7 @@ import './InlineVoiceRecorder.css';
 
 const WAVE_BARS = Array.from({ length: 28 }, (_, i) => i);
 const WAVE_BAR_COUNT = WAVE_BARS.length;
-const IDLE_BAR_LEVEL = 0.22;
+const IDLE_BAR_LEVEL = 0.18;
 
 const MAX_RECORD_SECONDS = 600;
 
@@ -15,26 +15,86 @@ function createIdleBarLevels() {
   return Array.from({ length: WAVE_BAR_COUNT }, () => IDLE_BAR_LEVEL);
 }
 
-function measureBarLevels(analyser) {
+/**
+ * RMS(시간) + 저·중역(주파수)로 한 시점의 파형 높이를 계산한다.
+ * iOS PWA에서 getByteFrequencyData만으로는 flat해지는 경우가 많아 시간 영역을 우선한다.
+ * @param {AnalyserNode} analyser
+ * @returns {number}
+ */
+function measureWaveSample(analyser) {
+  const timeData = new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(timeData);
+
+  let sumSquares = 0;
+  let peak = 0;
+  for (let i = 0; i < timeData.length; i += 1) {
+    const sample = (timeData[i] - 128) / 128;
+    sumSquares += sample * sample;
+    peak = Math.max(peak, Math.abs(sample));
+  }
+
+  const rms = Math.sqrt(sumSquares / timeData.length);
+
   const bins = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteFrequencyData(bins);
 
-  let sum = 0;
-  for (let i = 0; i < bins.length; i += 1) {
-    sum += bins[i];
-  }
-  const averageLevel = bins.length > 0 ? sum / bins.length / 255 : 0;
+  const bassEnd = Math.max(1, Math.floor(bins.length * 0.14));
+  const midEnd = Math.max(bassEnd + 1, Math.floor(bins.length * 0.42));
 
-  return WAVE_BARS.map((_, index) => {
-    const binIndex = Math.min(
-      bins.length - 1,
-      Math.floor((index / WAVE_BAR_COUNT) * bins.length * 0.72),
-    );
-    const bandLevel = bins[binIndex] / 255;
-    const combined = averageLevel * 0.5 + bandLevel * 0.5;
-    const normalized = Math.min(combined * 1.65, 1);
-    return IDLE_BAR_LEVEL + normalized * (0.95 - IDLE_BAR_LEVEL);
-  });
+  let bassSum = 0;
+  let midSum = 0;
+  for (let i = 0; i < bassEnd; i += 1) {
+    bassSum += bins[i];
+  }
+  for (let i = bassEnd; i < midEnd; i += 1) {
+    midSum += bins[i];
+  }
+
+  const bass = bassSum / bassEnd / 255;
+  const mid = midSum / (midEnd - bassEnd) / 255;
+  const amplitude = Math.min(rms * 3.4 + peak * 0.4, 1);
+  const tone = bass * 0.58 + mid * 0.42;
+  const shaped = Math.min(amplitude * (0.68 + tone * 0.52), 1);
+
+  return IDLE_BAR_LEVEL + shaped * (0.97 - IDLE_BAR_LEVEL);
+}
+
+/**
+ * @param {number[]} history
+ * @param {number} sample
+ * @returns {number[]}
+ */
+function shiftWaveHistory(history, sample) {
+  return [...history.slice(1), sample];
+}
+
+async function ensureAudioContextRunning(audioContext) {
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
+}
+
+/**
+ * @param {MediaStream} stream
+ * @returns {{ audioContext: AudioContext, analyser: AnalyserNode }}
+ */
+function createAudioAnalysisGraph(stream) {
+  const audioContext = new AudioContext();
+  const source = audioContext.createMediaStreamSource(stream);
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 512;
+  analyser.smoothingTimeConstant = 0.55;
+  analyser.minDecibels = -90;
+  analyser.maxDecibels = -10;
+
+  const muteGain = audioContext.createGain();
+  muteGain.gain.value = 0;
+
+  source.connect(analyser);
+  analyser.connect(muteGain);
+  muteGain.connect(audioContext.destination);
+
+  return { audioContext, analyser };
 }
 
 function formatTime(totalSeconds) {
@@ -70,6 +130,7 @@ export default function InlineVoiceRecorder({ onCancel, onComplete, isSubmitting
   const hasReachedMaxDurationRef = useRef(false);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
+  const waveHistoryRef = useRef(createIdleBarLevels());
   const levelAnimationRef = useRef(null);
 
   const closeAudioAnalysis = useCallback(() => {
@@ -146,19 +207,12 @@ export default function InlineVoiceRecorder({ onCancel, onComplete, isSubmitting
       streamRef.current = stream;
       chunksRef.current = [];
 
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.78;
-      source.connect(analyser);
+      const { audioContext, analyser } = createAudioAnalysisGraph(stream);
 
       audioContextRef.current = audioContext;
       analyserRef.current = analyser;
 
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
+      await ensureAudioContextRunning(audioContext);
 
       const mimeType = getSupportedMimeType();
       mimeTypeRef.current = mimeType;
@@ -173,9 +227,12 @@ export default function InlineVoiceRecorder({ onCancel, onComplete, isSubmitting
       };
 
       await playRecordingStartSound();
+      await ensureAudioContextRunning(audioContext);
 
       recorder.start(250);
       mediaRecorderRef.current = recorder;
+      waveHistoryRef.current = createIdleBarLevels();
+      setBarLevels(createIdleBarLevels());
       setIsRecording(true);
       setIsPaused(false);
     } catch {
@@ -215,15 +272,22 @@ export default function InlineVoiceRecorder({ onCancel, onComplete, isSubmitting
       || isPaused
       || hasReachedMaxDuration;
 
-    if (isWaveformFrozen || !analyserRef.current) {
+    if (!isRecording || errorMessage) {
+      waveHistoryRef.current = createIdleBarLevels();
       setBarLevels(createIdleBarLevels());
+      return undefined;
+    }
+
+    if (isWaveformFrozen || !analyserRef.current) {
       return undefined;
     }
 
     const analyser = analyserRef.current;
 
     const tick = () => {
-      setBarLevels(measureBarLevels(analyser));
+      const sample = measureWaveSample(analyser);
+      waveHistoryRef.current = shiftWaveHistory(waveHistoryRef.current, sample);
+      setBarLevels([...waveHistoryRef.current]);
       levelAnimationRef.current = requestAnimationFrame(tick);
     };
 
@@ -385,6 +449,7 @@ export default function InlineVoiceRecorder({ onCancel, onComplete, isSubmitting
   };
 
   const isBusy = isSubmitting || isFinalizing || isStartingRecording;
+  const isWaveformLive = isRecording && !isPaused && !isBusy && !errorMessage && !hasReachedMaxDuration;
 
   return (
     <div className="inline-check-in-panel inline-voice-recorder" role="region" aria-label="녹음 인증">
@@ -413,7 +478,7 @@ export default function InlineVoiceRecorder({ onCancel, onComplete, isSubmitting
 
       <div className="inline-voice-recorder__wave-row">
         <div
-          className={`inline-voice-recorder__waveform ${!isRecording || isPaused || isBusy || errorMessage ? 'inline-voice-recorder__waveform--paused' : ''}`}
+          className={`inline-voice-recorder__waveform ${isWaveformLive ? 'inline-voice-recorder__waveform--live' : 'inline-voice-recorder__waveform--paused'}`}
           aria-hidden="true"
         >
           {WAVE_BARS.map((bar) => (

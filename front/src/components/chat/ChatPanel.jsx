@@ -7,9 +7,7 @@ import './ChatPanel.css';
 
 const NEAR_BOTTOM_THRESHOLD_PX = 80;
 const KEYBOARD_OPEN_THRESHOLD_PX = 40;
-const MAX_IDLE_TOP_PADDING_PX = 120;
-const KEYBOARD_INSET_BUFFER_PX = 12;
-
+const LAYOUT_SHRINK_THRESHOLD_PX = 48;
 export default function ChatPanel({
   chatFeed,
   currentMemberId,
@@ -28,9 +26,14 @@ export default function ChatPanel({
   const inputRef = useRef(null);
   const suppressBlurRef = useRef(false);
   const stickToBottomRef = useRef(true);
+  const baselineInnerHeightRef = useRef(
+    typeof window !== 'undefined' ? window.innerHeight : 0,
+  );
   const keyboardAware = Boolean(showInput && dedicatedLayout);
   const viewportInset = useVisualViewportInset(keyboardAware);
   const keyboardVisible = keyboardAware && viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
+  const layoutShrunkForKeyboard = keyboardVisible
+    && window.innerHeight < baselineInnerHeightRef.current - LAYOUT_SHRINK_THRESHOLD_PX;
   const isEmpty = chatFeed.length === 0;
   const panelClassName = [
     'chat-panel',
@@ -42,16 +45,26 @@ export default function ChatPanel({
     .filter(Boolean)
     .join(' ');
 
-  const panelStyle = keyboardAware
-    ? {
-      '--chat-keyboard-inset': `${Math.max(0, viewportInset.bottom - KEYBOARD_INSET_BUFFER_PX)}px`,
-    }
+  const panelStyle = keyboardVisible && !layoutShrunkForKeyboard
+    ? { '--chat-keyboard-inset': `${viewportInset.bottom}px` }
     : undefined;
+
+  useEffect(() => {
+    if (!keyboardVisible) {
+      baselineInnerHeightRef.current = window.innerHeight;
+    }
+  }, [keyboardVisible]);
 
   const isNearBottom = useCallback(() => {
     const scrollElement = chatScrollRef?.current;
+    const contentElement = contentRef.current;
     if (!scrollElement) {
       return true;
+    }
+
+    const contentHeight = contentElement?.offsetHeight ?? 0;
+    if (contentHeight <= scrollElement.clientHeight) {
+      return false;
     }
 
     return (
@@ -69,42 +82,36 @@ export default function ChatPanel({
       return;
     }
 
-    const atBottom = pinToBottom || stickToBottomRef.current || isNearBottom();
-
     contentElement.style.paddingTop = '0px';
     const contentHeight = contentElement.offsetHeight;
-    const overflow = scrollElement.clientHeight - contentHeight;
+    const contentFillsViewport = contentHeight > scrollElement.clientHeight;
 
-    if (!keyboardVisible && overflow > 0 && atBottom) {
-      contentElement.style.paddingTop = `${Math.min(overflow, MAX_IDLE_TOP_PADDING_PX)}px`;
+    if (contentFillsViewport) {
+      const shouldPin = pinToBottom || stickToBottomRef.current || isNearBottom();
+      if (shouldPin) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+        stickToBottomRef.current = true;
+      }
+      return;
     }
 
-    if (atBottom && (pinToBottom || stickToBottomRef.current || isNearBottom())) {
-      scrollElement.scrollTop = scrollElement.scrollHeight;
-      stickToBottomRef.current = true;
-    }
-  }, [chatScrollRef, isNearBottom, keyboardVisible]);
+    scrollElement.scrollTop = 0;
+  }, [chatScrollRef, isNearBottom]);
 
   useEffect(() => {
     if (isEmpty) {
       return undefined;
     }
 
-    if (stickToBottomRef.current || isNearBottom()) {
-      stickToBottomRef.current = true;
-      syncChatScrollLayout({ pinToBottom: true });
+    syncChatScrollLayout({ pinToBottom: stickToBottomRef.current });
 
-      const afterLayout = window.setTimeout(
-        () => syncChatScrollLayout({ pinToBottom: true }),
-        80,
-      );
+    const afterLayout = window.setTimeout(
+      () => syncChatScrollLayout({ pinToBottom: stickToBottomRef.current }),
+      80,
+    );
 
-      return () => window.clearTimeout(afterLayout);
-    }
-
-    syncChatScrollLayout();
-    return undefined;
-  }, [chatFeed, isEmpty, isNearBottom, syncChatScrollLayout]);
+    return () => window.clearTimeout(afterLayout);
+  }, [chatFeed, isEmpty, syncChatScrollLayout]);
 
   useEffect(() => {
     const scrollElement = chatScrollRef?.current;

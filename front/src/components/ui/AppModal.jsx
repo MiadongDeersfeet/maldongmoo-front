@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useModalScrollLock } from '@/hooks/useModalScrollLock.js';
-import { resetHorizontalViewportScroll } from '@/utils/viewportScrollReset.js';
+import { syncVisualViewportHorizontalAlign } from '@/utils/viewportScrollReset.js';
 import './AppModal.css';
 
 export default function AppModal({
@@ -33,7 +33,7 @@ export default function AppModal({
 
   const handleBodyFocusOut = useCallback((event) => {
     if (!bodyRef.current?.contains(event.relatedTarget)) {
-      resetHorizontalViewportScroll();
+      syncVisualViewportHorizontalAlign();
     }
   }, []);
 

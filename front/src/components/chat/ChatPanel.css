@@ -53,7 +53,8 @@
 }
 
 .chat-panel--dedicated.chat-panel--keyboard-visible .chat-input-bar {
-  margin-bottom: calc(var(--chat-input-bottom-gap) + var(--chat-keyboard-inset, 0px));
+  /* resizes-content: 레이아웃이 줄어들면 inset 0, 아니면 visualViewport 보정만 */
+  margin-bottom: var(--chat-keyboard-inset, 0);
 }
 
 .chat-panel--inline-active .chat-scroll-area {

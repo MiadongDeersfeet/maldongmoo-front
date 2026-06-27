@@ -7,6 +7,7 @@ export default function BibleBookCombobox({
   selectedBook,
   onSelectBook,
   disabled = false,
+  onFieldFocus,
 }) {
   const listId = useId();
   const containerRef = useRef(null);
@@ -52,6 +53,7 @@ export default function BibleBookCombobox({
         aria-expanded={isOpen}
         aria-controls={listId}
         disabled={disabled}
+        onFocus={onFieldFocus}
         onChange={(event) => {
           const nextQuery = event.target.value;
           setQuery(nextQuery);
