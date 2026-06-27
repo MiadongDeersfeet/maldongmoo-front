@@ -107,6 +107,17 @@ export default function ChatPanel({
   }, [chatScrollRef]);
 
   useEffect(() => {
+    if (isEmpty) {
+      return undefined;
+    }
+
+    pinChatToBottom('auto');
+    const afterLayout = window.setTimeout(() => pinChatToBottom('auto'), 80);
+
+    return () => window.clearTimeout(afterLayout);
+  }, [chatFeed, isEmpty, pinChatToBottom]);
+
+  useEffect(() => {
     if (!keyboardAware || !isInputFocused) {
       return undefined;
     }
@@ -179,6 +190,7 @@ export default function ChatPanel({
               </section>
             ))
           )}
+          {!isEmpty && <div className="chat-scroll-area__bottom-spacer" aria-hidden="true" />}
         </div>
       </div>
 

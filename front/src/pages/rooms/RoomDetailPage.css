@@ -27,6 +27,10 @@
 html.chat-composer-active,
 html.chat-composer-active body {
   overflow: hidden;
+}
+
+html.chat-keyboard-open,
+html.chat-keyboard-open body {
   overscroll-behavior: none;
 }
 
