@@ -95,14 +95,15 @@ export default function ChatPanel({
 
   const captureBaselineScrollClientHeight = useCallback(() => {
     const scrollElement = chatScrollRef?.current;
-    if (!scrollElement || keyboardVisible) {
+    if (!scrollElement || scrollElement.clientHeight <= 0) {
       return;
     }
 
-    if (scrollElement.clientHeight > 0) {
-      baselineScrollClientHeightRef.current = scrollElement.clientHeight;
+    const current = scrollElement.clientHeight;
+    if (current > baselineScrollClientHeightRef.current) {
+      baselineScrollClientHeightRef.current = current;
     }
-  }, [chatScrollRef, keyboardVisible]);
+  }, [chatScrollRef]);
 
   useEffect(() => {
     captureBaselineScrollClientHeight();
@@ -116,17 +117,20 @@ export default function ChatPanel({
       return 0;
     }
 
-    if (keyboardVisible) {
-      const baseline = baselineScrollClientHeightRef.current;
-      if (baseline > 0) {
-        return baseline;
-      }
+    const baseline = baselineScrollClientHeightRef.current;
+    const current = scrollElement.clientHeight;
 
+    // Keyboard open animation shrinks clientHeight before keyboardVisible flips true.
+    if (baseline > 0 && current > 0 && current < baseline - 4) {
+      return baseline;
+    }
+
+    if (baseline === 0 && isInputFocused && current > 0) {
       return Number.MAX_SAFE_INTEGER;
     }
 
-    return scrollElement.clientHeight;
-  }, [chatScrollRef, keyboardVisible]);
+    return current;
+  }, [chatScrollRef, isInputFocused]);
 
   const contentOverflows = useCallback(() => {
     const scrollElement = chatScrollRef?.current;
