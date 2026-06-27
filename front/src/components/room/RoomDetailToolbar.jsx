@@ -12,6 +12,7 @@ export default function RoomDetailToolbar({
   isLeader,
   isRecitationExpanded,
   allowInlineRecitationExpand,
+  showCheckInStatus = true,
   onToggleRecitation,
   onCollapseRecitation,
   onOpenRecitationFullscreen,
@@ -22,9 +23,15 @@ export default function RoomDetailToolbar({
   totalMemberCount,
 }) {
   const showInlineExpanded = allowInlineRecitationExpand && isRecitationExpanded;
+  const toolbarClassName = [
+    'room-detail-toolbar',
+    !showCheckInStatus ? 'room-detail-toolbar--chat-tab' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <div className="room-detail-toolbar">
+    <div className={toolbarClassName}>
       {!showInlineExpanded ? (
         <PinnedSectionBar section={section} onToggleExpand={onToggleRecitation} />
       ) : (
@@ -36,12 +43,14 @@ export default function RoomDetailToolbar({
           onRegister={onOpenSectionEditor}
         />
       )}
-      <TodayCheckInBar
-        completedMembers={completedMembers}
-        pendingMembers={pendingMembers}
-        todayCompletedCount={todayCompletedCount}
-        totalMemberCount={totalMemberCount}
-      />
+      {showCheckInStatus && (
+        <TodayCheckInBar
+          completedMembers={completedMembers}
+          pendingMembers={pendingMembers}
+          todayCompletedCount={todayCompletedCount}
+          totalMemberCount={totalMemberCount}
+        />
+      )}
     </div>
   );
 }

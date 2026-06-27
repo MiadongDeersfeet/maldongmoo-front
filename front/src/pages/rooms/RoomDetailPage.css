@@ -45,6 +45,10 @@
   backdrop-filter: blur(6px);
 }
 
+.room-detail-toolbar--chat-tab {
+  padding-bottom: 0.375rem;
+}
+
 .room-mini-bar--expanded {
   border-color: rgba(63, 143, 122, 0.2);
   background: var(--color-card-soft);

@@ -219,7 +219,6 @@ export default function RoomDetailPage() {
   }, [numericRoomId, refreshSession]);
 
   const certFeedPanelRef = useRef(null);
-  const chatRoomPanelRef = useRef(null);
   const certificationFlowTimeoutsRef = useRef([]);
   const sectionRefreshTimeoutRef = useRef(null);
   const checkInRefreshTimeoutRef = useRef(null);
@@ -958,19 +957,12 @@ export default function RoomDetailPage() {
         const sentViaSocket = isChatSocketConnected && sendChatViaSocket(text);
         if (sentViaSocket) {
           setChatText('');
-          requestAnimationFrame(() => {
-            chatRoomPanelRef.current?.scrollToBottom('smooth');
-          });
           return;
         }
 
         await sendRoomChat(numericRoomId, text);
         setChatText('');
         await refreshChatData();
-
-        requestAnimationFrame(() => {
-          chatRoomPanelRef.current?.scrollToBottom('smooth');
-        });
       } catch (error) {
         showAlert(
           error instanceof ApiError ? error.message || '메시지 전송에 실패했습니다.' : '메시지 전송에 실패했습니다.',
@@ -1088,6 +1080,7 @@ export default function RoomDetailPage() {
                 isLeader={isLeader}
                 isRecitationExpanded={isRecitationExpanded}
                 allowInlineRecitationExpand={allowInlineRecitationExpand}
+                showCheckInStatus={allowInlineRecitationExpand}
                 onToggleRecitation={handleToggleRecitation}
                 onCollapseRecitation={() => setIsRecitationExpanded(false)}
                 onOpenRecitationFullscreen={handleOpenFullscreen}
@@ -1120,7 +1113,6 @@ export default function RoomDetailPage() {
               />
             ) : (
               <ChatRoomPanel
-                ref={chatRoomPanelRef}
                 chatFeed={chatFeed}
                 currentMemberId={member.memberId}
                 chatText={chatText}
@@ -1129,7 +1121,6 @@ export default function RoomDetailPage() {
                 onReactionSelect={handleChatReaction}
                 isReactionSubmitting={isChatReactionSubmitting}
                 showInput={showChatInput}
-                isChatSocketConnected={isChatSocketConnected}
               />
             )}
           </RoomDetailShell>

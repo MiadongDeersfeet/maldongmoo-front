@@ -30,6 +30,8 @@ export default function ChatPanel({
   const baselineInnerHeightRef = useRef(
     typeof window !== 'undefined' ? window.innerHeight : 0,
   );
+  const baselineScrollClientHeightRef = useRef(0);
+  const wasKeyboardVisibleRef = useRef(false);
   const keyboardAware = Boolean(showInput && dedicatedLayout);
   const viewportInset = useVisualViewportInset(keyboardAware);
   const keyboardVisible = keyboardAware && viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
@@ -58,6 +60,30 @@ export default function ChatPanel({
     }
   }, [keyboardVisible]);
 
+  useEffect(() => {
+    const scrollElement = chatScrollRef?.current;
+    if (!scrollElement || keyboardVisible || isEmpty) {
+      return undefined;
+    }
+
+    baselineScrollClientHeightRef.current = scrollElement.clientHeight;
+    return undefined;
+  }, [chatScrollRef, keyboardVisible, isEmpty, chatFeed]);
+
+  const getEffectiveScrollViewportHeight = useCallback(() => {
+    const scrollElement = chatScrollRef?.current;
+    if (!scrollElement) {
+      return 0;
+    }
+
+    const baseline = baselineScrollClientHeightRef.current;
+    if (keyboardVisible && baseline > 0) {
+      return baseline;
+    }
+
+    return scrollElement.clientHeight;
+  }, [chatScrollRef, keyboardVisible]);
+
   const isNearBottom = useCallback(() => {
     const scrollElement = chatScrollRef?.current;
     const contentElement = contentRef.current;
@@ -66,7 +92,8 @@ export default function ChatPanel({
     }
 
     const contentHeight = contentElement?.offsetHeight ?? 0;
-    if (contentHeight <= scrollElement.clientHeight) {
+    const viewportHeight = getEffectiveScrollViewportHeight();
+    if (contentHeight <= viewportHeight) {
       return false;
     }
 
@@ -74,7 +101,7 @@ export default function ChatPanel({
       scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight
       < NEAR_BOTTOM_THRESHOLD_PX
     );
-  }, [chatScrollRef]);
+  }, [chatScrollRef, getEffectiveScrollViewportHeight]);
 
   const contentFillsViewport = useCallback(() => {
     const scrollElement = chatScrollRef?.current;
@@ -83,10 +110,8 @@ export default function ChatPanel({
       return false;
     }
 
-    return contentElement.offsetHeight > scrollElement.clientHeight;
-  }, [chatScrollRef]);
-
-  const wasKeyboardVisibleRef = useRef(false);
+    return contentElement.offsetHeight > getEffectiveScrollViewportHeight();
+  }, [chatScrollRef, getEffectiveScrollViewportHeight]);
 
   const updateContentOverflowFlag = useCallback(() => {
     const overflows = contentFillsViewport();
@@ -175,14 +200,21 @@ export default function ChatPanel({
       return undefined;
     }
 
-    if (keyboardVisible && !wasKeyboardVisibleRef.current && shouldPinAfterAction()) {
-      stickToBottomRef.current = true;
-      syncChatScrollLayout({ pinToBottom: true });
+    const justOpened = keyboardVisible && !wasKeyboardVisibleRef.current;
+
+    if (justOpened) {
+      if (contentFillsViewport() && shouldPinAfterAction()) {
+        stickToBottomRef.current = true;
+        syncChatScrollLayout({ pinToBottom: true });
+      } else {
+        stickToBottomRef.current = false;
+        syncChatScrollLayout({ pinToBottom: false });
+      }
     }
 
     wasKeyboardVisibleRef.current = keyboardVisible;
     return undefined;
-  }, [isEmpty, keyboardVisible, shouldPinAfterAction, syncChatScrollLayout]);
+  }, [isEmpty, keyboardVisible, shouldPinAfterAction, syncChatScrollLayout, contentFillsViewport]);
 
   const refocusInput = useCallback(() => {
     requestAnimationFrame(() => {

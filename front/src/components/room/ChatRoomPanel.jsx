@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import ChatPanel from '@/components/chat/ChatPanel.jsx';
 
 function scrollElementToBottom(element, behavior = 'auto') {
@@ -22,7 +22,6 @@ const ChatRoomPanel = forwardRef(function ChatRoomPanel(
     onReactionSelect,
     isReactionSubmitting = false,
     showInput = true,
-    isChatSocketConnected = false,
   },
   ref,
 ) {
@@ -39,18 +38,6 @@ const ChatRoomPanel = forwardRef(function ChatRoomPanel(
     }),
     [scrollToBottom],
   );
-
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        scrollToBottom('auto');
-      });
-    });
-  }, [scrollToBottom]);
-
-  useEffect(() => {
-    scrollToBottom('auto');
-  }, [chatFeed, isChatSocketConnected, scrollToBottom]);
 
   return (
     <ChatPanel
