@@ -10,6 +10,23 @@ const KEYBOARD_OPEN_THRESHOLD_PX = 40;
 const LAYOUT_SHRINK_THRESHOLD_PX = 48;
 /** @temporary iPhone PWA keyboard/chrome 진단용 — 확인 후 제거 */
 const CHAT_KEYBOARD_LAYOUT_DEBUG = true;
+/** @temporary iOS focus pan 진단용 — 확인 후 제거 */
+const CHAT_IOS_FOCUS_PAN_DEBUG = true;
+
+function isRoomDetailChatContext() {
+  return Boolean(document.querySelector('.room-detail-shell'));
+}
+
+/** iOS 키보드 focus 시 document/window pan만 reset — .chat-scroll-area scrollTop은 건드리지 않음 */
+function resetOuterViewportScroll() {
+  if (!isRoomDetailChatContext()) {
+    return;
+  }
+
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
 
 function isRectInVisualViewport(rect, visualViewport) {
   if (!rect || !visualViewport) {
@@ -46,7 +63,9 @@ export default function ChatPanel({
   const baselineScrollClientHeightRef = useRef(0);
   const wasKeyboardVisibleRef = useRef(false);
   const keyboardAware = Boolean(showInput && dedicatedLayout);
-  const viewportInset = useVisualViewportInset(keyboardAware);
+  const viewportInset = useVisualViewportInset(keyboardAware, {
+    syncVisualViewportHeight: dedicatedLayout,
+  });
   const keyboardVisible = keyboardAware && viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
   const layoutShrunkForKeyboard = keyboardVisible
     && window.innerHeight < baselineInnerHeightRef.current - LAYOUT_SHRINK_THRESHOLD_PX;
@@ -67,6 +86,59 @@ export default function ChatPanel({
   const panelStyle = keyboardVisible && !layoutShrunkForKeyboard && contentOverflows
     ? { '--chat-keyboard-inset': `${viewportInset.bottom}px` }
     : undefined;
+
+  const outerScrollResetTimeoutsRef = useRef([]);
+
+  const clearOuterScrollResetTimeouts = useCallback(() => {
+    outerScrollResetTimeoutsRef.current.forEach((timeoutId) => {
+      window.clearTimeout(timeoutId);
+    });
+    outerScrollResetTimeoutsRef.current = [];
+  }, []);
+
+  const logChatIosFocusPanCheck = useCallback((source = 'unknown') => {
+    if (!CHAT_IOS_FOCUS_PAN_DEBUG || typeof window === 'undefined') {
+      return;
+    }
+
+    const visualViewport = window.visualViewport;
+
+    console.log('[chat-ios-focus-pan-check]', {
+      source,
+      innerHeight: window.innerHeight,
+      scrollY: window.scrollY,
+      documentScrollTop: document.documentElement.scrollTop,
+      bodyScrollTop: document.body.scrollTop,
+      visualViewportHeight: visualViewport?.height,
+      visualViewportOffsetTop: visualViewport?.offsetTop,
+      appVisualViewportHeight: document.documentElement.style.getPropertyValue('--app-visual-viewport-height'),
+      shellRect: document.querySelector('.room-detail-shell')?.getBoundingClientRect(),
+      headerRect: document.querySelector('.room-header')?.getBoundingClientRect(),
+      toolbarRect: document.querySelector('.room-detail-toolbar')?.getBoundingClientRect(),
+      tabsRect: document.querySelector('.room-feed-tabs')?.getBoundingClientRect(),
+      inputRect: document.querySelector('.chat-input-bar')?.getBoundingClientRect(),
+    });
+  }, []);
+
+  const scheduleOuterViewportScrollReset = useCallback((source = 'unknown') => {
+    if (!dedicatedLayout || !keyboardAware) {
+      return;
+    }
+
+    clearOuterScrollResetTimeouts();
+
+    const run = (phase) => {
+      resetOuterViewportScroll();
+      logChatIosFocusPanCheck(`${source}:${phase}`);
+    };
+
+    run('immediate');
+    requestAnimationFrame(() => run('rAF'));
+    outerScrollResetTimeoutsRef.current.push(window.setTimeout(() => run('t50'), 50));
+    outerScrollResetTimeoutsRef.current.push(window.setTimeout(() => run('t150'), 150));
+  }, [clearOuterScrollResetTimeouts, dedicatedLayout, keyboardAware, logChatIosFocusPanCheck]);
+
+  useEffect(() => () => clearOuterScrollResetTimeouts(), [clearOuterScrollResetTimeouts]);
 
   const logChatKeyboardLayout = useCallback((source = 'unknown') => {
     if (!CHAT_KEYBOARD_LAYOUT_DEBUG || typeof window === 'undefined') {
@@ -291,6 +363,10 @@ export default function ChatPanel({
   useEffect(() => {
     logChatKeyboardLayout(keyboardVisible ? 'keyboardVisible-on' : 'keyboardVisible-off');
 
+    if (keyboardVisible) {
+      scheduleOuterViewportScrollReset('keyboardVisible');
+    }
+
     const justOpened = keyboardVisible && !wasKeyboardVisibleRef.current;
 
     if (justOpened) {
@@ -309,7 +385,31 @@ export default function ChatPanel({
 
     wasKeyboardVisibleRef.current = keyboardVisible;
     return () => cancelAnimationFrame(afterLayoutFrameId);
-  }, [keyboardVisible, shouldPinAfterAction, syncChatScrollLayout, logChatKeyboardLayout]);
+  }, [
+    keyboardVisible,
+    shouldPinAfterAction,
+    syncChatScrollLayout,
+    logChatKeyboardLayout,
+    scheduleOuterViewportScrollReset,
+  ]);
+
+  useEffect(() => {
+    if (!keyboardAware || !keyboardVisible) {
+      return undefined;
+    }
+
+    const visualViewport = window.visualViewport;
+    if (!visualViewport) {
+      return undefined;
+    }
+
+    const handleVisualViewportScroll = () => {
+      scheduleOuterViewportScrollReset('visualViewport-scroll');
+    };
+
+    visualViewport.addEventListener('scroll', handleVisualViewportScroll);
+    return () => visualViewport.removeEventListener('scroll', handleVisualViewportScroll);
+  }, [keyboardAware, keyboardVisible, scheduleOuterViewportScrollReset]);
 
   const refocusInput = useCallback(() => {
     requestAnimationFrame(() => {
@@ -352,6 +452,8 @@ export default function ChatPanel({
   }, [onSubmit, refocusInput, shouldPinAfterAction, syncChatScrollLayout]);
 
   const handleInputFocus = () => {
+    scheduleOuterViewportScrollReset('input-focus');
+
     if (!contentFillsViewport()) {
       return;
     }

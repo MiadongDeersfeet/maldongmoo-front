@@ -16,10 +16,10 @@
 .room-detail-shell {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  height: 100svh;
-  max-height: 100dvh;
-  max-height: 100svh;
+  height: var(--app-visual-viewport-height, 100dvh);
+  height: var(--app-visual-viewport-height, 100svh);
+  max-height: var(--app-visual-viewport-height, 100dvh);
+  max-height: var(--app-visual-viewport-height, 100svh);
   overflow: hidden;
   overscroll-behavior: none;
   background:

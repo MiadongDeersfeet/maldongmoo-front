@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 
+const VISUAL_VIEWPORT_HEIGHT_VAR = '--app-visual-viewport-height';
+
 /**
  * Tracks soft-keyboard overlap using Visual Viewport API.
  * @param {boolean} enabled
+ * @param {{ syncVisualViewportHeight?: boolean }} [options]
  * @returns {{ bottom: number, height: number | null, offsetTop: number }}
  */
-export function useVisualViewportInset(enabled = true) {
+export function useVisualViewportInset(enabled = true, options = {}) {
+  const { syncVisualViewportHeight = false } = options;
   const [inset, setInset] = useState({ bottom: 0, height: null, offsetTop: 0 });
 
   useEffect(() => {
@@ -18,6 +22,23 @@ export function useVisualViewportInset(enabled = true) {
       return undefined;
     }
 
+    const syncViewportHeightVar = () => {
+      if (!syncVisualViewportHeight) {
+        return;
+      }
+
+      const height = Math.round(viewport.height || window.innerHeight);
+      document.documentElement.style.setProperty(VISUAL_VIEWPORT_HEIGHT_VAR, `${height}px`);
+    };
+
+    const clearViewportHeightVar = () => {
+      if (!syncVisualViewportHeight) {
+        return;
+      }
+
+      document.documentElement.style.removeProperty(VISUAL_VIEWPORT_HEIGHT_VAR);
+    };
+
     const update = () => {
       const bottom = Math.max(
         0,
@@ -29,6 +50,7 @@ export function useVisualViewportInset(enabled = true) {
         height: Math.round(viewport.height),
         offsetTop: Math.round(viewport.offsetTop),
       });
+      syncViewportHeightVar();
     };
 
     update();
@@ -40,8 +62,9 @@ export function useVisualViewportInset(enabled = true) {
       viewport.removeEventListener('resize', update);
       viewport.removeEventListener('scroll', update);
       window.removeEventListener('orientationchange', update);
+      clearViewportHeightVar();
     };
-  }, [enabled]);
+  }, [enabled, syncVisualViewportHeight]);
 
   return inset;
 }
