@@ -1,0 +1,15 @@
+.confirm-modal {
+  font-size: clamp(0.6875rem, 3.15vw, 0.9375rem);
+  line-height: 1.55;
+  letter-spacing: -0.02em;
+}
+
+.confirm-modal__message,
+.confirm-modal__description {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.confirm-modal__description {
+  margin-top: 0.75rem;
+}

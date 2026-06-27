@@ -8,6 +8,7 @@ export default function FadeToast({
   message,
   duration = DEFAULT_DURATION_MS,
   onDone,
+  nowrap = false,
 }) {
   const [isFading, setIsFading] = useState(false);
 
@@ -24,7 +25,7 @@ export default function FadeToast({
 
   return (
     <div
-      className={`fade-toast ${isFading ? 'fade-toast--out' : 'fade-toast--in'}`}
+      className={`fade-toast ${nowrap ? 'fade-toast--nowrap' : ''} ${isFading ? 'fade-toast--out' : 'fade-toast--in'}`}
       role="status"
       aria-live="polite"
     >

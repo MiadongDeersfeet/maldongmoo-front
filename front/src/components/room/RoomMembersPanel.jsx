@@ -85,13 +85,6 @@ export default function RoomMembersPanel({
           );
         })}
       </ul>
-
-      <p className="room-members-panel__hint">
-        다른 말동무 프로필을 왼쪽으로 밀면 격려하기를 보낼 수 있어요.
-        {isLeader ? ' 방장은 내보내기도 할 수 있어요.' : ''}
-        {' '}
-        PC에서는 행을 클릭해도 버튼이 열려요.
-      </p>
     </section>
   );
 }

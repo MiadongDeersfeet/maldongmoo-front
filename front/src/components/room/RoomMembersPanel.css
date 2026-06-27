@@ -72,13 +72,3 @@
   list-style: none;
   overflow-y: auto;
 }
-
-.room-members-panel__hint {
-  margin: 0;
-  padding: 0.875rem var(--space-page-x) calc(0.875rem + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid rgba(31, 52, 48, 0.06);
-  background: rgba(255, 255, 255, 0.72);
-  color: var(--color-text-sub);
-  font-size: 0.8125rem;
-  line-height: 1.5;
-}

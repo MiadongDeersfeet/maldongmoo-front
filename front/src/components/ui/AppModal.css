@@ -103,6 +103,7 @@
 
 .app-modal__body p {
   margin: 0;
+  word-break: keep-all;
 }
 
 .app-modal__body p + p {

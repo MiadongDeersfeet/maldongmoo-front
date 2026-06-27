@@ -12,9 +12,16 @@
   font-weight: 700;
   line-height: 1.4;
   text-align: center;
+  word-break: keep-all;
   box-shadow: 0 12px 32px rgba(31, 52, 48, 0.22);
   pointer-events: none;
   transform: translateX(-50%);
+}
+
+.fade-toast--nowrap {
+  width: max-content;
+  max-width: min(calc(100vw - 2rem), 24rem);
+  white-space: nowrap;
 }
 
 .fade-toast--in {

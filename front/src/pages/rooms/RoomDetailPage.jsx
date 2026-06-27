@@ -1310,6 +1310,7 @@ export default function RoomDetailPage() {
           <FadeToast
             key={inviteCopyToast.id}
             message="초대코드가 복사되었습니다."
+            nowrap
             onDone={() => setInviteCopyToast(null)}
           />
         )}

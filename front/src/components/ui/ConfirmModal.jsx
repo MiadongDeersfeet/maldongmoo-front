@@ -1,4 +1,5 @@
 import AppModal from '@/components/ui/AppModal.jsx';
+import './ConfirmModal.css';
 
 export default function ConfirmModal({
   isOpen,
@@ -43,8 +44,10 @@ export default function ConfirmModal({
         </>
       }
     >
-      <p>{message}</p>
-      {description ? <p>{description}</p> : null}
+      <div className="confirm-modal">
+        <p className="confirm-modal__message">{message}</p>
+        {description ? <p className="confirm-modal__description">{description}</p> : null}
+      </div>
     </AppModal>
   );
 }
