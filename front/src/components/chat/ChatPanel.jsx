@@ -6,6 +6,7 @@ import ChatMessageBubble from './ChatMessageBubble.jsx';
 import './ChatPanel.css';
 
 const KEYBOARD_OPEN_THRESHOLD_PX = 40;
+const NEAR_BOTTOM_THRESHOLD_PX = 96;
 
 export default function ChatPanel({
   chatFeed,
@@ -97,6 +98,17 @@ export default function ChatPanel({
     }
 
     const apply = () => {
+      const contentElement = scrollElement.querySelector('.chat-scroll-area__content');
+      if (!contentElement) {
+        return;
+      }
+
+      const overflows = contentElement.offsetHeight > scrollElement.clientHeight;
+      if (!overflows) {
+        scrollElement.scrollTop = 0;
+        return;
+      }
+
       scrollElement.scrollTo({
         top: scrollElement.scrollHeight,
         behavior,
@@ -107,6 +119,36 @@ export default function ChatPanel({
       requestAnimationFrame(apply);
     });
   }, [chatScrollRef]);
+
+  const isNearBottom = useCallback(() => {
+    const scrollElement = chatScrollRef?.current;
+    if (!scrollElement) {
+      return true;
+    }
+
+    return (
+      scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight
+      < NEAR_BOTTOM_THRESHOLD_PX
+    );
+  }, [chatScrollRef]);
+
+  const syncChatScrollLayout = useCallback(({ pinToBottom = false } = {}) => {
+    const scrollElement = chatScrollRef?.current;
+    const contentElement = scrollElement?.querySelector('.chat-scroll-area__content');
+    if (!scrollElement || !contentElement) {
+      return;
+    }
+
+    const overflows = contentElement.offsetHeight > scrollElement.clientHeight;
+    if (!overflows) {
+      scrollElement.scrollTop = 0;
+      return;
+    }
+
+    if (pinToBottom && isNearBottom()) {
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+    }
+  }, [chatScrollRef, isNearBottom]);
 
   useEffect(() => {
     if (!keyboardAware || !isInputFocused) {
@@ -145,37 +187,29 @@ export default function ChatPanel({
       return undefined;
     }
 
-    const isNearBottom = () => {
-      const threshold = 96;
-      return scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight < threshold;
+    const handleContentResize = () => {
+      syncChatScrollLayout({ pinToBottom: isNearBottom() });
     };
 
-    const pinIfNearBottom = () => {
-      if (isNearBottom()) {
-        pinChatToBottom('auto');
-      }
-    };
-
-    const resizeObserver = new ResizeObserver(pinIfNearBottom);
+    const resizeObserver = new ResizeObserver(handleContentResize);
     resizeObserver.observe(contentElement);
 
     return () => resizeObserver.disconnect();
-  }, [chatFeed, chatScrollRef, isEmpty, pinChatToBottom]);
+  }, [chatFeed, chatScrollRef, isEmpty, isNearBottom, syncChatScrollLayout]);
 
   useEffect(() => {
     if (isEmpty) {
       return undefined;
     }
 
-    pinChatToBottom('auto');
-    const afterLayout = window.setTimeout(() => pinChatToBottom('auto'), 80);
-    const afterKeyboard = window.setTimeout(() => pinChatToBottom('auto'), 280);
+    syncChatScrollLayout({ pinToBottom: isNearBottom() });
+    const afterLayout = window.setTimeout(
+      () => syncChatScrollLayout({ pinToBottom: isNearBottom() }),
+      80,
+    );
 
-    return () => {
-      window.clearTimeout(afterLayout);
-      window.clearTimeout(afterKeyboard);
-    };
-  }, [chatFeed, isEmpty, pinChatToBottom]);
+    return () => window.clearTimeout(afterLayout);
+  }, [chatFeed, isEmpty, isNearBottom, syncChatScrollLayout]);
 
   useEffect(() => {
     if (!keyboardAware || isEmpty) {
