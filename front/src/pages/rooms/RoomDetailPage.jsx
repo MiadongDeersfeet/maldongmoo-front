@@ -1,14 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import RoomHeader from '@/components/room/RoomHeader.jsx';
-import PinnedSectionBar from '@/components/room/PinnedSectionBar.jsx';
-import TodayCheckInBar from '@/components/room/TodayCheckInBar.jsx';
-import RecitationCardExpanded from '@/components/recitation/RecitationCardExpanded.jsx';
 import RecitationFullscreenViewer from '@/components/recitation/RecitationFullscreenViewer.jsx';
-import FeedList from '@/components/feed/FeedList.jsx';
-import ChatPanel from '@/components/chat/ChatPanel.jsx';
 import CheckInMethodMenu from '@/components/room/CheckInMethodMenu.jsx';
 import RoomFeedTabs from '@/components/room/RoomFeedTabs.jsx';
+import RoomDetailShell from '@/components/room/RoomDetailShell.jsx';
+import RoomDetailToolbar from '@/components/room/RoomDetailToolbar.jsx';
+import CertificationFeedPanel from '@/components/room/CertificationFeedPanel.jsx';
+import ChatRoomPanel from '@/components/room/ChatRoomPanel.jsx';
 import RoomMembersPanel from '@/components/room/RoomMembersPanel.jsx';
 import InlineVoiceRecorder from '@/components/room/InlineVoiceRecorder.jsx';
 import InlineCounterRecorder from '@/components/room/InlineCounterRecorder.jsx';
@@ -43,7 +42,6 @@ import { useRoomChatSocket } from '@/hooks/useRoomChatSocket.js';
 import { useRoomEventsSocket } from '@/hooks/useRoomEventsSocket.js';
 import { scheduleHorizontalViewportScrollReset } from '@/utils/viewportScrollReset.js';
 
-const FEED_TOP_REVEAL_THRESHOLD = 12;
 const CERT_TOAST_SHOW_DELAY_MS = 100;
 const CERT_TAB_SWITCH_DELAY_MS = 420;
 const CERT_SCROLL_DELAY_MS = 600;
@@ -69,7 +67,6 @@ export default function RoomDetailPage() {
   const [checkInMenuOpen, setCheckInMenuOpen] = useState(false);
   const [inlineMode, setInlineMode] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showOldestHint, setShowOldestHint] = useState(false);
   const [activeTab, setActiveTab] = useState('certifications');
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [unreadCertificationCount, setUnreadCertificationCount] = useState(0);
@@ -221,10 +218,8 @@ export default function RoomDetailPage() {
     };
   }, [numericRoomId, refreshSession]);
 
-  const feedScrollRef = useRef(null);
-  const chatScrollRef = useRef(null);
-  const hasInitialScrolledRef = useRef(false);
-  const scrollSmoothOnNextFeedRef = useRef(false);
+  const certFeedPanelRef = useRef(null);
+  const chatRoomPanelRef = useRef(null);
   const certificationFlowTimeoutsRef = useRef([]);
   const sectionRefreshTimeoutRef = useRef(null);
   const checkInRefreshTimeoutRef = useRef(null);
@@ -236,32 +231,6 @@ export default function RoomDetailPage() {
   const roomRefreshInFlightRef = useRef(false);
   const activeTabRef = useRef(activeTab);
   const currentMemberIdRef = useRef(member?.memberId ?? null);
-
-  const scrollToBottom = useCallback((ref, behavior = 'auto') => {
-    const el = ref.current;
-    if (!el) return;
-
-    requestAnimationFrame(() => {
-      el.scrollTo({
-        top: el.scrollHeight,
-        behavior,
-      });
-    });
-  }, []);
-
-  const scrollToFeedBottom = useCallback(
-    (behavior = 'auto') => {
-      scrollToBottom(feedScrollRef, behavior);
-      setShowOldestHint(false);
-    },
-    [scrollToBottom],
-  );
-
-  const handleFeedScroll = useCallback(() => {
-    const el = feedScrollRef.current;
-    if (!el) return;
-    setShowOldestHint(el.scrollTop <= FEED_TOP_REVEAL_THRESHOLD);
-  }, []);
 
   const todayDashboardSafe = todayDashboard ?? {
     todayCompletedCount: 0,
@@ -599,11 +568,9 @@ export default function RoomDetailPage() {
 
     // 3) 탭 전환 후 피드 최하단으로 스크롤
     scheduleCertificationFlow(() => {
-      scrollSmoothOnNextFeedRef.current = true;
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          scrollToFeedBottom('smooth');
-          scrollSmoothOnNextFeedRef.current = false;
+          certFeedPanelRef.current?.scrollToBottom('smooth');
         });
       });
     }, CERT_SCROLL_DELAY_MS);
@@ -614,7 +581,6 @@ export default function RoomDetailPage() {
   }, [
     clearCertificationFlowTimeouts,
     scheduleCertificationFlow,
-    scrollToFeedBottom,
   ]);
 
   const closeInlinePanel = useCallback(() => {
@@ -690,9 +656,13 @@ export default function RoomDetailPage() {
     ],
   );
 
-  const handleToggleRecitationExpand = useCallback(() => {
+  const handleToggleRecitation = useCallback(() => {
+    if (activeTab === 'chat') {
+      setIsFullscreenRecitationOpen(true);
+      return;
+    }
     setIsRecitationExpanded((prev) => !prev);
-  }, []);
+  }, [activeTab]);
 
   const handleOpenFullscreen = useCallback(() => {
     setIsFullscreenRecitationOpen(true);
@@ -701,18 +671,7 @@ export default function RoomDetailPage() {
 
   const handleCloseFullscreen = useCallback(() => {
     setIsFullscreenRecitationOpen(false);
-    if (scrollSmoothOnNextFeedRef.current) {
-      requestAnimationFrame(() => {
-        scrollToFeedBottom('smooth');
-        scrollSmoothOnNextFeedRef.current = false;
-      });
-    }
-  }, [scrollToFeedBottom]);
-
-  useEffect(() => {
-    hasInitialScrolledRef.current = false;
-    scrollSmoothOnNextFeedRef.current = false;
-  }, [numericRoomId]);
+  }, []);
 
   useEffect(
     () => () => {
@@ -720,53 +679,6 @@ export default function RoomDetailPage() {
     },
     [clearCertificationFlowTimeouts],
   );
-
-  useEffect(() => {
-    if (isFullscreenRecitationOpen || activeTab !== 'certifications') return undefined;
-
-    if (scrollSmoothOnNextFeedRef.current) {
-      scrollSmoothOnNextFeedRef.current = false;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scrollToFeedBottom('smooth');
-        });
-      });
-      return undefined;
-    }
-
-    if (!hasInitialScrolledRef.current) {
-      hasInitialScrolledRef.current = true;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scrollToFeedBottom('auto');
-        });
-      });
-    }
-
-    return undefined;
-  }, [feed, feedVersion, isFullscreenRecitationOpen, activeTab, scrollToFeedBottom]);
-
-  useEffect(() => {
-    if (activeTab !== 'chat' || isFullscreenRecitationOpen) return undefined;
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        scrollToBottom(chatScrollRef, 'auto');
-      });
-    });
-
-    return undefined;
-  }, [activeTab, numericRoomId, isFullscreenRecitationOpen, scrollToBottom]);
-
-  useEffect(() => {
-    if (activeTab !== 'chat' || isFullscreenRecitationOpen) return undefined;
-
-    requestAnimationFrame(() => {
-      scrollToBottom(chatScrollRef, 'auto');
-    });
-
-    return undefined;
-  }, [chatFeed, activeTab, isFullscreenRecitationOpen, scrollToBottom, isChatSocketConnected]);
 
   useEffect(() => {
     if (!inlineMode) return undefined;
@@ -1047,7 +959,7 @@ export default function RoomDetailPage() {
         if (sentViaSocket) {
           setChatText('');
           requestAnimationFrame(() => {
-            scrollToBottom(chatScrollRef, 'smooth');
+            chatRoomPanelRef.current?.scrollToBottom('smooth');
           });
           return;
         }
@@ -1057,7 +969,7 @@ export default function RoomDetailPage() {
         await refreshChatData();
 
         requestAnimationFrame(() => {
-          scrollToBottom(chatScrollRef, 'smooth');
+          chatRoomPanelRef.current?.scrollToBottom('smooth');
         });
       } catch (error) {
         showAlert(
@@ -1074,7 +986,6 @@ export default function RoomDetailPage() {
       isChatSocketConnected,
       sendChatViaSocket,
       refreshChatData,
-      scrollToBottom,
       showAlert,
     ],
   );
@@ -1085,18 +996,17 @@ export default function RoomDetailPage() {
   const showFooter = !inlineMode && activeTab !== 'chat' && !membersPanelOpen;
   const isInlineActive = Boolean(inlineMode);
   const showChatInput = activeTab === 'chat' && !inlineMode;
+  const allowInlineRecitationExpand = activeTab === 'certifications';
 
   const handleFeedTabChange = useCallback((tab) => {
     if (tab === 'chat') {
       setCheckInMenuOpen(false);
       setMembersPanelOpen(false);
       setUnreadChatCount(0);
+      setIsRecitationExpanded(false);
     }
     setActiveTab(tab);
   }, []);
-  const feedAreaClass = ['feed-area', 'scrollbar-soft', isInlineActive ? 'feed-area--panel-open' : '']
-    .filter(Boolean)
-    .join(' ');
 
   if (roomLoading) {
     return (
@@ -1162,82 +1072,67 @@ export default function RoomDetailPage() {
     <div className="app-page">
       <div className="app-shell room-detail-shell">
         {!isFullscreenRecitationOpen && (
-          <>
-            <RoomHeader
-              roomName={room.roomName}
-              memberCount={memberCount}
-              todayCompletedCount={todayDashboardSafe.todayCompletedCount}
-              onBack={() => navigate(-1)}
-              onMoreClick={handleLeaveMenuClick}
-            />
-
-            <div className="room-detail-body">
-              <div className="room-detail-toolbar">
-                {!isRecitationExpanded ? (
-                  <PinnedSectionBar
-                    section={section}
-                    onToggleExpand={handleToggleRecitationExpand}
-                  />
-                ) : (
-                  <RecitationCardExpanded
-                    section={section}
-                    isLeader={isLeader}
-                    onCollapse={() => setIsRecitationExpanded(false)}
-                    onOpenFullscreen={handleOpenFullscreen}
-                    onRegister={handleOpenSectionEditor}
-                  />
-                )}
-                <TodayCheckInBar
-                  completedMembers={todayDashboardSafe.completedMembers}
-                  pendingMembers={todayDashboardSafe.pendingMembers}
-                  todayCompletedCount={todayDashboardSafe.todayCompletedCount}
-                  totalMemberCount={todayDashboardSafe.totalMemberCount}
-                />
-              </div>
-
+          <RoomDetailShell
+            header={(
+              <RoomHeader
+                roomName={room.roomName}
+                memberCount={memberCount}
+                todayCompletedCount={todayDashboardSafe.todayCompletedCount}
+                onBack={() => navigate(-1)}
+                onMoreClick={handleLeaveMenuClick}
+              />
+            )}
+            toolbar={(
+              <RoomDetailToolbar
+                section={section}
+                isLeader={isLeader}
+                isRecitationExpanded={isRecitationExpanded}
+                allowInlineRecitationExpand={allowInlineRecitationExpand}
+                onToggleRecitation={handleToggleRecitation}
+                onCollapseRecitation={() => setIsRecitationExpanded(false)}
+                onOpenRecitationFullscreen={handleOpenFullscreen}
+                onOpenSectionEditor={handleOpenSectionEditor}
+                completedMembers={todayDashboardSafe.completedMembers}
+                pendingMembers={todayDashboardSafe.pendingMembers}
+                todayCompletedCount={todayDashboardSafe.todayCompletedCount}
+                totalMemberCount={todayDashboardSafe.totalMemberCount}
+              />
+            )}
+            tabs={(
               <RoomFeedTabs
                 activeTab={activeTab}
                 onChange={handleFeedTabChange}
                 unreadChatCount={unreadChatCount}
                 unreadCertificationCount={unreadCertificationCount}
               />
-
-              {activeTab === 'certifications' ? (
-                <section
-                  ref={feedScrollRef}
-                  className={feedAreaClass}
-                  aria-label="인증 피드"
-                  role="tabpanel"
-                  onScroll={handleFeedScroll}
-                >
-                  <FeedList
-                    feed={feed}
-                    currentMemberId={member.memberId}
-                    roomId={numericRoomId}
-                    onAmenToggle={handleAmenToggle}
-                    onStartCheckIn={handleStartCheckIn}
-                    variant="timeline"
-                    isInlineActive={isInlineActive}
-                    showOldestHint={showOldestHint}
-                  />
-                </section>
-              ) : (
-                <ChatPanel
-                  chatFeed={chatFeed}
-                  currentMemberId={member.memberId}
-                  chatScrollRef={chatScrollRef}
-                  chatText={chatText}
-                  onChatTextChange={setChatText}
-                  onSubmit={handleSendChatMessage}
-                  onReactionSelect={handleChatReaction}
-                  isReactionSubmitting={isChatReactionSubmitting}
-                  showInput={showChatInput}
-                  isInlineActive={isInlineActive}
-                  dedicatedLayout
-                />
-              )}
-            </div>
-          </>
+            )}
+          >
+            {activeTab === 'certifications' ? (
+              <CertificationFeedPanel
+                ref={certFeedPanelRef}
+                feed={feed}
+                feedVersion={feedVersion}
+                currentMemberId={member.memberId}
+                roomId={numericRoomId}
+                onAmenToggle={handleAmenToggle}
+                onStartCheckIn={handleStartCheckIn}
+                isInlineActive={isInlineActive}
+              />
+            ) : (
+              <ChatRoomPanel
+                ref={chatRoomPanelRef}
+                chatFeed={chatFeed}
+                currentMemberId={member.memberId}
+                chatText={chatText}
+                onChatTextChange={setChatText}
+                onSubmit={handleSendChatMessage}
+                onReactionSelect={handleChatReaction}
+                isReactionSubmitting={isChatReactionSubmitting}
+                showInput={showChatInput}
+                isChatSocketConnected={isChatSocketConnected}
+              />
+            )}
+          </RoomDetailShell>
         )}
 
         {isFullscreenRecitationOpen && (
