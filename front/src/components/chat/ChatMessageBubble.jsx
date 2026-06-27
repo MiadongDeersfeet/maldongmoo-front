@@ -197,7 +197,7 @@ export default function ChatMessageBubble({
       <div ref={rowRef} className="chat-message-row is-mine">
         <div className="chat-message-content is-mine">
           <div className="chat-message-bubble-row is-mine">
-            <div className="chat-message-side-meta">
+            <div className="chat-message-meta">
               {showUnreadCount && (
                 <span className="chat-message-unread-count">{message.unreadCount}</span>
               )}

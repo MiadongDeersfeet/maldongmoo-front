@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Smile, Send } from 'lucide-react';
 import DateDivider from '@/components/feed/DateDivider.jsx';
+import { useVisualViewportInset } from '@/hooks/useVisualViewportInset.js';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
 import './ChatPanel.css';
 
 const NEAR_BOTTOM_THRESHOLD_PX = 80;
+const KEYBOARD_OPEN_THRESHOLD_PX = 40;
+const MAX_IDLE_TOP_PADDING_PX = 120;
 
 export default function ChatPanel({
   chatFeed,
@@ -24,15 +27,23 @@ export default function ChatPanel({
   const inputRef = useRef(null);
   const suppressBlurRef = useRef(false);
   const stickToBottomRef = useRef(true);
+  const keyboardAware = Boolean(showInput && dedicatedLayout);
+  const viewportInset = useVisualViewportInset(keyboardAware);
+  const keyboardVisible = keyboardAware && viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
   const isEmpty = chatFeed.length === 0;
   const panelClassName = [
     'chat-panel',
     dedicatedLayout ? 'chat-panel--dedicated' : '',
     isInlineActive ? 'chat-panel--inline-active' : '',
     showInput ? '' : 'chat-panel--no-input',
+    keyboardVisible ? 'chat-panel--keyboard-visible' : '',
   ]
     .filter(Boolean)
     .join(' ');
+
+  const panelStyle = keyboardAware
+    ? { '--chat-keyboard-inset': `${viewportInset.bottom}px` }
+    : undefined;
 
   const isNearBottom = useCallback(() => {
     const scrollElement = chatScrollRef?.current;
@@ -56,14 +67,17 @@ export default function ChatPanel({
     contentElement.style.paddingTop = '0px';
     const contentHeight = contentElement.offsetHeight;
     const overflow = scrollElement.clientHeight - contentHeight;
-    contentElement.style.paddingTop = overflow > 0 ? `${overflow}px` : '0px';
+
+    if (!keyboardVisible && overflow > 0) {
+      contentElement.style.paddingTop = `${Math.min(overflow, MAX_IDLE_TOP_PADDING_PX)}px`;
+    }
 
     const shouldPin = pinToBottom || stickToBottomRef.current || isNearBottom();
     if (shouldPin) {
       scrollElement.scrollTop = scrollElement.scrollHeight;
       stickToBottomRef.current = true;
     }
-  }, [chatScrollRef, isNearBottom]);
+  }, [chatScrollRef, isNearBottom, keyboardVisible]);
 
   useEffect(() => {
     if (isEmpty) {
@@ -100,13 +114,13 @@ export default function ChatPanel({
     resizeObserver.observe(scrollElement);
     resizeObserver.observe(contentElement);
 
-    syncChatScrollLayout({ pinToBottom: true });
+    syncChatScrollLayout({ pinToBottom: keyboardVisible || stickToBottomRef.current });
 
     return () => {
       scrollElement.removeEventListener('scroll', handleScroll);
       resizeObserver.disconnect();
     };
-  }, [chatScrollRef, isEmpty, isNearBottom, syncChatScrollLayout]);
+  }, [chatScrollRef, isEmpty, isNearBottom, keyboardVisible, syncChatScrollLayout]);
 
   const refocusInput = useCallback(() => {
     requestAnimationFrame(() => {
@@ -162,6 +176,7 @@ export default function ChatPanel({
   return (
     <div
       className={panelClassName}
+      style={panelStyle}
       role="tabpanel"
       aria-label="채팅"
     >

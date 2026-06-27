@@ -41,6 +41,10 @@
   margin: 0 var(--space-page-x) calc(var(--chat-input-bottom-gap) + env(safe-area-inset-bottom, 0px));
 }
 
+.chat-panel--dedicated.chat-panel--keyboard-visible .chat-input-bar {
+  margin-bottom: calc(var(--chat-input-bottom-gap) + var(--chat-keyboard-inset, 0px));
+}
+
 .chat-panel--inline-active .chat-scroll-area {
   padding-bottom: 14rem;
 }
