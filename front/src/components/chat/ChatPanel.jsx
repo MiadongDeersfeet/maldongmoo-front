@@ -60,6 +60,8 @@ export default function ChatPanel({
     );
   }, [chatScrollRef]);
 
+  const wasKeyboardVisibleRef = useRef(false);
+
   const syncChatScrollLayout = useCallback(({ pinToBottom = false } = {}) => {
     const scrollElement = chatScrollRef?.current;
     const contentElement = contentRef.current;
@@ -88,16 +90,21 @@ export default function ChatPanel({
       return undefined;
     }
 
-    stickToBottomRef.current = true;
-    syncChatScrollLayout({ pinToBottom: true });
+    if (stickToBottomRef.current || isNearBottom()) {
+      stickToBottomRef.current = true;
+      syncChatScrollLayout({ pinToBottom: true });
 
-    const afterLayout = window.setTimeout(
-      () => syncChatScrollLayout({ pinToBottom: true }),
-      80,
-    );
+      const afterLayout = window.setTimeout(
+        () => syncChatScrollLayout({ pinToBottom: true }),
+        80,
+      );
 
-    return () => window.clearTimeout(afterLayout);
-  }, [chatFeed, isEmpty, syncChatScrollLayout]);
+      return () => window.clearTimeout(afterLayout);
+    }
+
+    syncChatScrollLayout();
+    return undefined;
+  }, [chatFeed, isEmpty, isNearBottom, syncChatScrollLayout]);
 
   useEffect(() => {
     const scrollElement = chatScrollRef?.current;
@@ -118,13 +125,27 @@ export default function ChatPanel({
     resizeObserver.observe(scrollElement);
     resizeObserver.observe(contentElement);
 
-    syncChatScrollLayout({ pinToBottom: keyboardVisible || stickToBottomRef.current });
+    syncChatScrollLayout({ pinToBottom: stickToBottomRef.current });
 
     return () => {
       scrollElement.removeEventListener('scroll', handleScroll);
       resizeObserver.disconnect();
     };
-  }, [chatScrollRef, isEmpty, isNearBottom, keyboardVisible, syncChatScrollLayout]);
+  }, [chatScrollRef, isEmpty, isNearBottom, syncChatScrollLayout]);
+
+  useEffect(() => {
+    if (isEmpty) {
+      wasKeyboardVisibleRef.current = keyboardVisible;
+      return undefined;
+    }
+
+    if (keyboardVisible && !wasKeyboardVisibleRef.current && stickToBottomRef.current) {
+      syncChatScrollLayout({ pinToBottom: true });
+    }
+
+    wasKeyboardVisibleRef.current = keyboardVisible;
+    return undefined;
+  }, [isEmpty, keyboardVisible, syncChatScrollLayout]);
 
   const refocusInput = useCallback(() => {
     requestAnimationFrame(() => {
@@ -170,13 +191,6 @@ export default function ChatPanel({
     syncChatScrollLayout({ pinToBottom: true });
   };
 
-  const handleScrollAreaPointerDown = (event) => {
-    if (event.target.closest('.chat-bubble-wrap, .chat-input-bar, .chat-reaction-picker')) {
-      return;
-    }
-    inputRef.current?.blur();
-  };
-
   return (
     <div
       className={panelClassName}
@@ -187,7 +201,6 @@ export default function ChatPanel({
       <div
         ref={chatScrollRef}
         className="chat-scroll-area scrollbar-soft"
-        onPointerDown={handleScrollAreaPointerDown}
       >
         <div ref={contentRef} className="chat-scroll-area__content">
           {isEmpty ? (
@@ -233,6 +246,7 @@ export default function ChatPanel({
             maxLength={300}
             aria-label="채팅 메시지"
             enterKeyHint="send"
+            inputMode="text"
           />
           <button
             type="submit"

@@ -14,6 +14,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0.125rem var(--space-page-x) 0.375rem;
+  scroll-padding-top: 0.375rem;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
@@ -21,6 +22,16 @@
 
 .chat-scroll-area__content {
   width: 100%;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+
+.chat-panel--keyboard-visible .chat-scroll-area {
+  scroll-padding-top: 0.5rem;
+}
+
+.chat-panel--keyboard-visible .chat-scroll-area__content {
+  padding-top: 0.375rem;
 }
 
 .chat-panel__empty {
