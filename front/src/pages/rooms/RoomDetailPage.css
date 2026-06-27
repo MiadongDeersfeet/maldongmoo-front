@@ -21,19 +21,10 @@
   max-height: 100dvh;
   max-height: 100svh;
   overflow: hidden;
+  overscroll-behavior: none;
   background:
     radial-gradient(circle at top right, rgba(207, 237, 227, 0.55), transparent 260px),
     linear-gradient(180deg, #f8f6ef 0%, #eef5f1 100%);
-}
-
-html.chat-composer-active,
-html.chat-composer-active body {
-  overscroll-behavior: none;
-}
-
-html.chat-keyboard-open,
-html.chat-keyboard-open body {
-  overscroll-behavior: none;
 }
 
 .room-detail-body {
@@ -71,6 +62,8 @@ html.chat-keyboard-open body {
 /* 방 상세: viewport·shell 외곽 스크롤바만 숨김 (피드 영역 스크롤바는 scrollbar-soft 유지) */
 html:has(.room-detail-shell),
 body:has(.room-detail-shell) {
+  overflow: hidden;
+  overscroll-behavior: none;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }

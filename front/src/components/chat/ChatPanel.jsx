@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Smile, Send } from 'lucide-react';
 import DateDivider from '@/components/feed/DateDivider.jsx';
-import { useVisualViewportInset } from '@/hooks/useVisualViewportInset.js';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
 import './ChatPanel.css';
 
-const KEYBOARD_OPEN_THRESHOLD_PX = 40;
-
-function isKeyboardVisible(viewportInset) {
-  return viewportInset.bottom >= KEYBOARD_OPEN_THRESHOLD_PX;
-}
+const NEAR_BOTTOM_THRESHOLD_PX = 80;
 
 export default function ChatPanel({
   chatFeed,
@@ -25,126 +20,93 @@ export default function ChatPanel({
   dedicatedLayout = false,
 }) {
   const [reactionPickerMessageId, setReactionPickerMessageId] = useState(null);
-  const wasKeyboardOpenRef = useRef(false);
+  const contentRef = useRef(null);
   const inputRef = useRef(null);
   const suppressBlurRef = useRef(false);
-  const keyboardAware = Boolean(showInput && dedicatedLayout);
-  const viewportInset = useVisualViewportInset(keyboardAware);
-  const keyboardVisible = keyboardAware && isKeyboardVisible(viewportInset);
+  const stickToBottomRef = useRef(true);
   const isEmpty = chatFeed.length === 0;
   const panelClassName = [
     'chat-panel',
     dedicatedLayout ? 'chat-panel--dedicated' : '',
     isInlineActive ? 'chat-panel--inline-active' : '',
     showInput ? '' : 'chat-panel--no-input',
-    keyboardVisible ? 'chat-panel--keyboard-open' : '',
   ]
     .filter(Boolean)
     .join(' ');
 
-  const syncKeyboardDocumentState = useCallback((open) => {
-    document.documentElement.classList.toggle('chat-keyboard-open', open);
-    document.documentElement.classList.toggle('chat-composer-active', open);
-  }, []);
-
-  useEffect(() => {
-    if (!keyboardAware) {
-      syncKeyboardDocumentState(false);
-      return undefined;
-    }
-
-    syncKeyboardDocumentState(keyboardVisible);
-
-    return () => {
-      syncKeyboardDocumentState(false);
-      document.documentElement.style.removeProperty('--keyboard-inset');
-    };
-  }, [keyboardAware, keyboardVisible, syncKeyboardDocumentState]);
-
-  useEffect(() => {
-    if (!keyboardAware) {
-      return;
-    }
-
-    document.documentElement.style.setProperty(
-      '--keyboard-inset',
-      `${viewportInset.bottom}px`,
-    );
-  }, [keyboardAware, viewportInset.bottom]);
-
-  const pinChatToBottom = useCallback((behavior = 'auto') => {
+  const isNearBottom = useCallback(() => {
     const scrollElement = chatScrollRef?.current;
     if (!scrollElement) {
+      return true;
+    }
+
+    return (
+      scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight
+      < NEAR_BOTTOM_THRESHOLD_PX
+    );
+  }, [chatScrollRef]);
+
+  const syncChatScrollLayout = useCallback(({ pinToBottom = false } = {}) => {
+    const scrollElement = chatScrollRef?.current;
+    const contentElement = contentRef.current;
+    if (!scrollElement || !contentElement) {
       return;
     }
 
-    const apply = () => {
-      scrollElement.scrollTo({
-        top: scrollElement.scrollHeight,
-        behavior,
-      });
-    };
+    contentElement.style.paddingTop = '0px';
+    const contentHeight = contentElement.offsetHeight;
+    const overflow = scrollElement.clientHeight - contentHeight;
+    contentElement.style.paddingTop = overflow > 0 ? `${overflow}px` : '0px';
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(apply);
-    });
-  }, [chatScrollRef]);
+    const shouldPin = pinToBottom || stickToBottomRef.current || isNearBottom();
+    if (shouldPin) {
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+      stickToBottomRef.current = true;
+    }
+  }, [chatScrollRef, isNearBottom]);
 
   useEffect(() => {
     if (isEmpty) {
       return undefined;
     }
 
-    const scrollElement = chatScrollRef?.current;
-    const contentElement = scrollElement?.querySelector('.chat-scroll-area__content');
-    if (!scrollElement || !contentElement) {
-      return undefined;
-    }
+    stickToBottomRef.current = true;
+    syncChatScrollLayout({ pinToBottom: true });
 
-    const isNearBottom = () => {
-      const threshold = 96;
-      return scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight < threshold;
-    };
-
-    const pinIfNearBottom = () => {
-      if (isNearBottom()) {
-        pinChatToBottom('auto');
-      }
-    };
-
-    const resizeObserver = new ResizeObserver(pinIfNearBottom);
-    resizeObserver.observe(contentElement);
-
-    return () => resizeObserver.disconnect();
-  }, [chatFeed, chatScrollRef, isEmpty, pinChatToBottom]);
-
-  useEffect(() => {
-    if (isEmpty) {
-      return undefined;
-    }
-
-    pinChatToBottom('auto');
-    const afterLayout = window.setTimeout(() => pinChatToBottom('auto'), 80);
+    const afterLayout = window.setTimeout(
+      () => syncChatScrollLayout({ pinToBottom: true }),
+      80,
+    );
 
     return () => window.clearTimeout(afterLayout);
-  }, [chatFeed, isEmpty, pinChatToBottom]);
+  }, [chatFeed, isEmpty, syncChatScrollLayout]);
 
   useEffect(() => {
-    if (!keyboardAware || isEmpty) {
+    const scrollElement = chatScrollRef?.current;
+    const contentElement = contentRef.current;
+    if (!scrollElement || !contentElement || isEmpty) {
       return undefined;
     }
 
-    if (keyboardVisible && !wasKeyboardOpenRef.current) {
-      pinChatToBottom('auto');
-    }
+    const handleScroll = () => {
+      stickToBottomRef.current = isNearBottom();
+    };
 
-    wasKeyboardOpenRef.current = keyboardVisible;
-    return undefined;
-  }, [keyboardAware, isEmpty, keyboardVisible, pinChatToBottom]);
+    const resizeObserver = new ResizeObserver(() => {
+      syncChatScrollLayout();
+    });
 
-  const dismissKeyboard = useCallback(() => {
-    inputRef.current?.blur();
-  }, []);
+    scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+    resizeObserver.observe(scrollElement);
+    resizeObserver.observe(contentElement);
+
+    syncChatScrollLayout({ pinToBottom: true });
+
+    return () => {
+      scrollElement.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [chatScrollRef, isEmpty, isNearBottom, syncChatScrollLayout]);
 
   const refocusInput = useCallback(() => {
     requestAnimationFrame(() => {
@@ -160,6 +122,7 @@ export default function ChatPanel({
   const handleFormSubmit = useCallback((event) => {
     event.preventDefault();
     suppressBlurRef.current = true;
+    stickToBottomRef.current = true;
 
     let submitResult;
     try {
@@ -173,7 +136,7 @@ export default function ChatPanel({
     const finishComposer = () => {
       suppressBlurRef.current = false;
       refocusInput();
-      pinChatToBottom('auto');
+      syncChatScrollLayout({ pinToBottom: true });
     };
 
     if (submitResult && typeof submitResult.then === 'function') {
@@ -182,17 +145,18 @@ export default function ChatPanel({
     }
 
     finishComposer();
-  }, [onSubmit, pinChatToBottom, refocusInput]);
+  }, [onSubmit, refocusInput, syncChatScrollLayout]);
 
   const handleInputFocus = () => {
-    pinChatToBottom('auto');
+    stickToBottomRef.current = true;
+    syncChatScrollLayout({ pinToBottom: true });
   };
 
   const handleScrollAreaPointerDown = (event) => {
     if (event.target.closest('.chat-bubble-wrap, .chat-input-bar, .chat-reaction-picker')) {
       return;
     }
-    dismissKeyboard();
+    inputRef.current?.blur();
   };
 
   return (
@@ -206,7 +170,7 @@ export default function ChatPanel({
         className="chat-scroll-area scrollbar-soft"
         onPointerDown={handleScrollAreaPointerDown}
       >
-        <div className="chat-scroll-area__content">
+        <div ref={contentRef} className="chat-scroll-area__content">
           {isEmpty ? (
             <p className="chat-panel__empty">아직 채팅이 없어요. 첫 메시지를 남겨보세요.</p>
           ) : (
@@ -227,9 +191,6 @@ export default function ChatPanel({
                 ))}
               </section>
             ))
-          )}
-          {!isEmpty && !dedicatedLayout && (
-            <div className="chat-scroll-area__bottom-spacer" aria-hidden="true" />
           )}
         </div>
       </div>

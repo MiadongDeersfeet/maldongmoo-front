@@ -12,15 +12,6 @@
   transition: min-height 0.22s ease, padding 0.22s ease;
 }
 
-html.chat-keyboard-open .room-header {
-  min-height: 2.75rem;
-  padding-bottom: 0.25rem;
-}
-
-html.chat-keyboard-open .room-header__subtitle {
-  display: none;
-}
-
 .room-header__back,
 .room-header__more {
   display: flex;
