@@ -23,6 +23,8 @@ export default function ChatPanel({
   const [reactionPickerMessageId, setReactionPickerMessageId] = useState(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const wasKeyboardOpenRef = useRef(false);
+  const inputRef = useRef(null);
+  const suppressBlurRef = useRef(false);
   const keyboardAware = Boolean(showInput && dedicatedLayout);
   const viewportInset = useVisualViewportInset(keyboardAware);
   const isEmpty = chatFeed.length === 0;
@@ -152,6 +154,46 @@ export default function ChatPanel({
     wasKeyboardOpenRef.current = keyboardVisible;
   }, [keyboardAware, viewportInset.bottom, pinChatToBottom]);
 
+  const refocusInput = useCallback(() => {
+    requestAnimationFrame(() => {
+      inputRef.current?.focus({ preventScroll: true });
+      setIsInputFocused(true);
+      setKeyboardOpenClass(true);
+    });
+  }, [setKeyboardOpenClass]);
+
+  const preventComposerBlur = useCallback((event) => {
+    event.preventDefault();
+    suppressBlurRef.current = true;
+  }, []);
+
+  const handleFormSubmit = useCallback((event) => {
+    event.preventDefault();
+    suppressBlurRef.current = true;
+
+    let submitResult;
+    try {
+      submitResult = onSubmit?.(event);
+    } catch (error) {
+      suppressBlurRef.current = false;
+      refocusInput();
+      throw error;
+    }
+
+    const finishComposer = () => {
+      suppressBlurRef.current = false;
+      refocusInput();
+      pinChatToBottom('auto');
+    };
+
+    if (submitResult && typeof submitResult.then === 'function') {
+      submitResult.finally(finishComposer);
+      return;
+    }
+
+    finishComposer();
+  }, [onSubmit, pinChatToBottom, refocusInput]);
+
   const handleInputFocus = () => {
     setIsInputFocused(true);
     setKeyboardOpenClass(true);
@@ -159,7 +201,13 @@ export default function ChatPanel({
   };
 
   const handleInputBlur = () => {
-    setIsInputFocused(false);
+    requestAnimationFrame(() => {
+      if (suppressBlurRef.current || document.activeElement === inputRef.current) {
+        return;
+      }
+
+      setIsInputFocused(false);
+    });
   };
 
   return (
@@ -196,11 +244,17 @@ export default function ChatPanel({
       </div>
 
       {showInput && (
-        <form className="chat-input-bar" onSubmit={onSubmit}>
-          <button type="button" className="chat-emoji-button" aria-label="이모지">
+        <form className="chat-input-bar" onSubmit={handleFormSubmit}>
+          <button
+            type="button"
+            className="chat-emoji-button"
+            aria-label="이모지"
+            onPointerDown={preventComposerBlur}
+          >
             <Smile size={18} strokeWidth={2} />
           </button>
           <input
+            ref={inputRef}
             value={chatText}
             onChange={(e) => onChatTextChange(e.target.value)}
             onFocus={handleInputFocus}
@@ -215,6 +269,7 @@ export default function ChatPanel({
             className="chat-send-button"
             disabled={!chatText.trim()}
             aria-label="메시지 보내기"
+            onPointerDown={preventComposerBlur}
           >
             <Send size={16} strokeWidth={2.25} />
           </button>
