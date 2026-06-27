@@ -122,70 +122,73 @@ export default function ChatMessageBubble({
     'chat-bubble-wrap',
     isMine ? 'is-mine' : '',
     isPickerOpen ? 'is-picker-open' : '',
-    hasReactions ? 'has-reactions' : '',
   ]
     .filter(Boolean)
     .join(' ');
 
+  const reactionSummary = hasReactions ? (
+    <div className="chat-reaction-summary" aria-label="메시지 반응 요약">
+      {reactions.map(({ reactionType, count }) => {
+        const isSelected = message.myReactionType === reactionType;
+        return (
+          <button
+            key={reactionType}
+            type="button"
+            className={`chat-reaction-summary__chip${isSelected ? ' is-mine' : ''}`}
+            aria-label={`${getChatReactionEmoji(reactionType)} ${count}`}
+            disabled={isReactionSubmitting}
+            onClick={() => handleReactionClick(reactionType)}
+          >
+            <span className="chat-reaction-summary__emoji">{getChatReactionEmoji(reactionType)}</span>
+            <span className="chat-reaction-summary__count">{count}</span>
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
   const bubbleWrap = (
     <div className={bubbleWrapClassName}>
-      <div
-        className="chat-bubble chat-bubble--interactive"
-        role="button"
-        tabIndex={0}
-        aria-expanded={isPickerOpen}
-        aria-label="메시지. 길게 눌러 반응을 선택하세요"
-        onPointerDown={handleBubblePointerDown}
-        onPointerMove={handleBubblePointerMove}
-        onPointerUp={handleBubblePointerUp}
-        onPointerCancel={handleBubblePointerUp}
-        onPointerLeave={handleBubblePointerUp}
-        onContextMenu={handleBubbleContextMenu}
-      >
-        {message.messageText}
+      <div className="chat-bubble-inner">
+        <div
+          className="chat-bubble chat-bubble--interactive"
+          role="button"
+          tabIndex={0}
+          aria-expanded={isPickerOpen}
+          aria-label="메시지. 길게 눌러 반응을 선택하세요"
+          onPointerDown={handleBubblePointerDown}
+          onPointerMove={handleBubblePointerMove}
+          onPointerUp={handleBubblePointerUp}
+          onPointerCancel={handleBubblePointerUp}
+          onPointerLeave={handleBubblePointerUp}
+          onContextMenu={handleBubbleContextMenu}
+        >
+          {message.messageText}
+        </div>
+
+        {isPickerOpen && (
+          <div className="chat-reaction-picker" role="toolbar" aria-label="메시지 반응">
+            {CHAT_REACTION_OPTIONS.map(({ type, emoji, label }) => {
+              const isSelected = message.myReactionType === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  className={`chat-reaction-picker__button${isSelected ? ' is-selected' : ''}`}
+                  aria-label={label}
+                  aria-pressed={isSelected}
+                  disabled={isReactionSubmitting}
+                  onClick={() => handleReactionClick(type)}
+                >
+                  {emoji}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {isPickerOpen && (
-        <div className="chat-reaction-picker" role="toolbar" aria-label="메시지 반응">
-          {CHAT_REACTION_OPTIONS.map(({ type, emoji, label }) => {
-            const isSelected = message.myReactionType === type;
-            return (
-              <button
-                key={type}
-                type="button"
-                className={`chat-reaction-picker__button${isSelected ? ' is-selected' : ''}`}
-                aria-label={label}
-                aria-pressed={isSelected}
-                disabled={isReactionSubmitting}
-                onClick={() => handleReactionClick(type)}
-              >
-                {emoji}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {hasReactions && (
-        <div className="chat-reaction-summary" aria-label="메시지 반응 요약">
-          {reactions.map(({ reactionType, count }) => {
-            const isSelected = message.myReactionType === reactionType;
-            return (
-              <button
-                key={reactionType}
-                type="button"
-                className={`chat-reaction-summary__chip${isSelected ? ' is-mine' : ''}`}
-                aria-label={`${getChatReactionEmoji(reactionType)} ${count}`}
-                disabled={isReactionSubmitting}
-                onClick={() => handleReactionClick(reactionType)}
-              >
-                <span className="chat-reaction-summary__emoji">{getChatReactionEmoji(reactionType)}</span>
-                <span className="chat-reaction-summary__count">{count}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {reactionSummary}
     </div>
   );
 

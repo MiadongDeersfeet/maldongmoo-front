@@ -15,9 +15,10 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0.25rem var(--space-page-x) 0;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: auto;
+  overscroll-behavior-y: contain;
   display: flex;
   flex-direction: column;
 }
@@ -35,12 +36,11 @@
 }
 
 html.chat-keyboard-open .chat-scroll-area__content {
-  margin-top: 0;
   min-height: auto;
 }
 
 html.chat-keyboard-open .chat-scroll-area__bottom-spacer {
-  height: calc(var(--chat-input-height) + 0.25rem);
+  height: calc(var(--chat-input-height) + 0.375rem);
 }
 
 .chat-panel--dedicated.chat-panel--no-input .chat-scroll-area__bottom-spacer {
@@ -82,12 +82,7 @@ html.chat-keyboard-open .chat-scroll-area__bottom-spacer {
   );
   bottom: auto;
   z-index: 30;
-}
-
-html.chat-keyboard-open .chat-panel--dedicated .chat-input-bar {
-  top: auto;
-  bottom: var(--chat-input-bottom-gap);
-  box-shadow: 0 4px 14px rgba(48, 65, 55, 0.08);
+  will-change: top;
 }
 
 .chat-input-bar {

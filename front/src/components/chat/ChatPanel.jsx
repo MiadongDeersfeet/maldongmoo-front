@@ -126,8 +126,41 @@ export default function ChatPanel({
     const resizeObserver = new ResizeObserver(pin);
     resizeObserver.observe(scrollElement);
 
+    const contentElement = scrollElement.querySelector('.chat-scroll-area__content');
+    if (contentElement) {
+      resizeObserver.observe(contentElement);
+    }
+
     return () => resizeObserver.disconnect();
-  }, [keyboardAware, isInputFocused, chatScrollRef]);
+  }, [keyboardAware, isInputFocused, chatScrollRef, chatFeed]);
+
+  useEffect(() => {
+    if (isEmpty) {
+      return undefined;
+    }
+
+    const scrollElement = chatScrollRef?.current;
+    const contentElement = scrollElement?.querySelector('.chat-scroll-area__content');
+    if (!scrollElement || !contentElement) {
+      return undefined;
+    }
+
+    const isNearBottom = () => {
+      const threshold = 96;
+      return scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight < threshold;
+    };
+
+    const pinIfNearBottom = () => {
+      if (isNearBottom()) {
+        pinChatToBottom('auto');
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(pinIfNearBottom);
+    resizeObserver.observe(contentElement);
+
+    return () => resizeObserver.disconnect();
+  }, [chatFeed, chatScrollRef, isEmpty, pinChatToBottom]);
 
   useEffect(() => {
     if (isEmpty) {
